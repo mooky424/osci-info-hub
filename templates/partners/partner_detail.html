@@ -1,0 +1,116 @@
+<div class="modal-header">
+  <h2>{{ partner }}</h2>
+  <button class="modal-close" onclick="closeModal()">&times;</button>
+</div>
+
+<div class="modal-body">
+  <div class="detail-grid">
+    <div class="detail-section">
+      <h3>General Information</h3>
+      <dl>
+        <dt>Area Code</dt>
+        <dd>{{ partner.area_code }}</dd>
+
+        <dt>Sector</dt>
+        <dd>{{ partner.sector }}</dd>
+
+        <dt>Address</dt>
+        <dd>
+          {{ partner.address }}
+          {% if partner.google_maps_link %}
+            <a href="{{ partner.google_maps_link }}" target="_blank" rel="noopener" class="map-link">Map</a>
+          {% endif %}
+        </dd>
+
+        <dt>Location</dt>
+        <dd>{{ partner.ncr_or_province|default:"—" }}</dd>
+
+        {% if partner.description %}
+        <dt>Description</dt>
+        <dd>{{ partner.description }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+
+    <div class="detail-section">
+      <h3>Contacts</h3>
+      <dl>
+        <dt>Point Person</dt>
+        <dd>{{ partner.point_person }}</dd>
+
+        <dt>Head of Office</dt>
+        <dd>{{ partner.head_of_office }}</dd>
+
+        <dt>Contact No.</dt>
+        <dd>{{ partner.contact_no }}</dd>
+
+        {% if partner.contact_email %}
+        <dt>Email</dt>
+        <dd><a href="mailto:{{ partner.contact_email }}">{{ partner.contact_email }}</a></dd>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>Status History</h3>
+    {% if statuses %}
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Updated By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in statuses %}
+        <tr>
+          <td><span class="badge badge-{{ s.status|lower }}">{{ s.status }}</span></td>
+          <td>{{ s.date }}</td>
+          <td>{{ s.updated_by|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="text-muted">No status history.</p>
+    {% endif %}
+  </div>
+
+  <div class="detail-section">
+    <h3>MOA History</h3>
+    {% if moas %}
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Issued</th>
+          <th>Expires</th>
+          <th>Programs</th>
+          <th>Amendment</th>
+          <th>Document</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for moa in moas %}
+        <tr>
+          <td>{{ moa.date_issued }}</td>
+          <td>{{ moa.termination_date }}</td>
+          <td>{{ moa.programs_included|default:"—" }}</td>
+          <td>{{ moa.with_amendment|yesno:"Yes,No" }}</td>
+          <td>
+            {% if moa.scanned_moa %}
+              <a href="{{ moa.scanned_moa }}" target="_blank" rel="noopener">View</a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="text-muted">No MOA records.</p>
+    {% endif %}
+  </div>
+</div>

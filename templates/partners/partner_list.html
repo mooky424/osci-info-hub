@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Partners — OSCI Partner Hub{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Partner Areas</h1>
+</div>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Partner</th>
+      <th>Status</th>
+      <th>MOA</th>
+      <th>Last Updated</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for partner in partners %}
+    <tr class="clickable-row"
+        hx-get="{% url 'partner-detail' partner.pk %}"
+        hx-target="#modal"
+        hx-swap="innerHTML">
+      <td>
+        <span class="partner-name">{{ partner.name }}</span>
+        {% if partner.acronym %}
+          <span class="partner-acronym">{{ partner.acronym }}</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if partner.current_status %}
+          <span class="badge badge-{{ partner.current_status.status|lower }}">
+            {{ partner.current_status.status }}
+          </span>
+        {% else %}
+          <span class="badge badge-none">No status</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if partner.active_contract and partner.active_contract.scanned_moa %}
+          <a href="{{ partner.active_contract.scanned_moa }}"
+             target="_blank"
+             rel="noopener"
+             onclick="event.stopPropagation();"
+             class="moa-link">
+            View MOA
+          </a>
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if partner.current_status %}
+          {{ partner.current_status.date }}
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4" class="empty-state">No partner areas found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

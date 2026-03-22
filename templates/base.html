@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}OSCI Partner Hub{% endblock %}</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{% url 'partner-list' %}" class="navbar-brand">OSCI Partner Hub</a>
+  </nav>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="modal-backdrop" class="modal-backdrop" onclick="closeModal()" style="display:none;"></div>
+  <div id="modal" class="modal" style="display:none;"></div>
+
+  <script>
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.detail.target.id === 'modal') {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-backdrop').style.display = 'block';
+      }
+    });
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      document.getElementById('modal-backdrop').style.display = 'none';
+      document.getElementById('modal').innerHTML = '';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
