@@ -31,7 +31,8 @@
     <tr class="clickable-row"
         hx-get="{% url 'partner-detail' partner.pk %}"
         hx-target="#modal"
-        hx-swap="innerHTML">
+        hx-swap="innerHTML"
+        hx-select="unset">
       <td>
         <span class="partner-name">{{ partner.name }}</span>
         {% if partner.acronym %}
