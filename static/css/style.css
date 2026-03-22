@@ -103,9 +103,6 @@ body {
   margin-left: 0.25rem;
 }
 
-.partner-acronym::before { content: "("; }
-.partner-acronym::after { content: ")"; }
-
 /* Badges */
 .badge {
   display: inline-block;
