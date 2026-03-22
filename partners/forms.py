@@ -23,3 +23,9 @@ class PartnerForm(forms.ModelForm):
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def __init__(self, *args, **kwargs):
+        is_edit = kwargs.pop("is_edit", False)
+        super().__init__(*args, **kwargs)
+        if is_edit:
+            self.fields["name"].disabled = True

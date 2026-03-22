@@ -1,5 +1,11 @@
 <div class="modal-header">
-  <h2>Add Partner Area</h2>
+  <h2>
+    {% if is_edit %}
+    Edit Partner Area
+    {% else %}
+    Add Partner Area
+    {% endif %}
+  </h2>
   <button class="modal-close" onclick="closeModal()">&times;</button>
 </div>
 

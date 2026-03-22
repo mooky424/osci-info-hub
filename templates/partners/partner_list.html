@@ -24,6 +24,7 @@
       <th>Status</th>
       <th>MOA</th>
       <th>Last Updated</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -67,6 +68,21 @@
         {% else %}
           <span class="text-muted">—</span>
         {% endif %}
+      </td>
+      <td>
+        <button class="btn-icon btn-edit"
+              hx-get="{% url 'partner-update' partner.pk %}"
+              hx-target="#modal"
+              hx-swap="innerHTML"
+              onclick="event.stopPropagation();">
+          <i data-lucide="edit" size="10"></i>
+        </button>
+        <button class="btn-icon btn-delete"
+              hx-delete="{% url 'partner-delete' partner.pk %}"
+              hx-target="closest tr"
+              hx-swap="outerHTML"
+              onclick="event.stopPropagation();">
+          <i data-lucide="trash" size="10"></i>
       </td>
     </tr>
     {% empty %}
