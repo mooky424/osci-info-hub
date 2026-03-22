@@ -5,9 +5,19 @@
 {% block content %}
 <div class="page-header">
   <h1>Partner Areas</h1>
+  <button class="btn btn-primary"
+          hx-get="{% url 'partner-create' %}"
+          hx-target="#modal"
+          hx-swap="innerHTML">
+    Add Partner
+  </button>
 </div>
 
-<table class="table">
+<table class="table"
+       hx-get="{% url 'partner-list' %}"
+       hx-trigger="partnerChanged from:body"
+       hx-select="table.table"
+       hx-swap="outerHTML">
   <thead>
     <tr>
       <th>Partner</th>

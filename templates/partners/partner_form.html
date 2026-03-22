@@ -1,0 +1,30 @@
+<div class="modal-header">
+  <h2>Add Partner Area</h2>
+  <button class="modal-close" onclick="closeModal()">&times;</button>
+</div>
+
+<div class="modal-body">
+  <form hx-post="{% url 'partner-create' %}"
+        hx-target="#modal"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {% for field in form %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {% if field.field.required %}<span class="required">*</span>{% endif %}
+      </label>
+      {{ field }}
+      {% if field.errors %}
+        <span class="field-error">{{ field.errors.0 }}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn btn-primary">Add Partner</button>
+    </div>
+  </form>
+</div>

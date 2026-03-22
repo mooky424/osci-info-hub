@@ -28,6 +28,10 @@
       }
     });
 
+    document.body.addEventListener('partnerChanged', function() {
+      closeModal();
+    });
+
     function closeModal() {
       document.getElementById('modal').style.display = 'none';
       document.getElementById('modal-backdrop').style.display = 'none';
