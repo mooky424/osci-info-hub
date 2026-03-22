@@ -11,18 +11,15 @@ contact_validator = RegexValidator(
 class Partner(models.Model):
     SECTOR_CHOICES = [
         ("Urban Poor", "Urban Poor"),
-        ("Rural Poor", "Rural Poor"),
-        ("Environment", "Environment"),
+        ("WSGM", "WSGM"),
+        ("PWD", "PWD"),
+        ("PDL", "PDL"),
         ("Education", "Education"),
+        ("Labor", "Labor"),
+        ("Agriculture", "Agriculture"),
+        ("IP", "IP"),
         ("Health", "Health"),
-        ("Disaster", "Disaster"),
-        ("Indigenous Peoples", "Indigenous Peoples"),
-        ("Workers", "Workers"),
-        ("Women", "Women"),
-        ("Youth", "Youth"),
-        ("Persons with Disabilities", "Persons with Disabilities"),
-        ("Elderly", "Elderly"),
-        ("Others", "Others"),
+        ("Environment", "Environment"),
     ]
 
     NCR_CHOICES = [
@@ -37,9 +34,7 @@ class Partner(models.Model):
     description = models.TextField(blank=True)
     address = models.CharField(max_length=255)
     google_maps_link = models.URLField(max_length=500, blank=True)
-    ncr_or_province = models.CharField(
-        max_length=10, choices=NCR_CHOICES, blank=True
-    )
+    ncr_or_province = models.CharField(max_length=10, choices=NCR_CHOICES, blank=True)
     point_person = models.CharField(max_length=100)
     head_of_office = models.CharField(max_length=100)
     contact_no = models.CharField(max_length=11, validators=[contact_validator])
@@ -79,9 +74,7 @@ class PartnerStatus(models.Model):
     )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     date = models.DateField(auto_now_add=True)
-    updated_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True
-    )
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         ordering = ["-date"]
