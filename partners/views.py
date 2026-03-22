@@ -1,5 +1,7 @@
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 
+from .forms import PartnerForm
 from .models import Partner
 
 
@@ -19,3 +21,17 @@ def partner_detail(request, pk):
             "moas": partner.moas.all(),
         },
     )
+
+
+def partner_create(request):
+    if request.method == "POST":
+        form = PartnerForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(
+                headers={"HX-Trigger": "partnerChanged"},
+            )
+        return render(request, "partners/partner_form.html", {"form": form})
+
+    form = PartnerForm()
+    return render(request, "partners/partner_form.html", {"form": form})
