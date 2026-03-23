@@ -1,0 +1,41 @@
+<fieldset class="formset-section form-box">
+  <span class="form-box-label">MOA</span>
+  {{ moa_formset.management_form }}
+  {% for mf in moa_formset.extra_forms %}
+  {{ mf.id }}
+  <div class="form-row form-row-moa-dates">
+    {% with field=mf.date_issued %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endwith %}
+    {% with field=mf.termination_date %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endwith %}
+    {% with field=mf.with_amendment %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endwith %}
+  </div>
+  {% for field in mf.visible_fields %}
+    {% if field.name != "date_issued" and field.name != "termination_date" and field.name != "with_amendment" %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}
+        <span class="field-error">{{ field.errors.0 }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+  {% endfor %}
+</fieldset>

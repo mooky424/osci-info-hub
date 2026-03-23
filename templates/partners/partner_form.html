@@ -10,27 +10,79 @@
 </div>
 
 <div class="modal-body">
-  <form hx-post="{% url 'partner-create' %}"
+  <form hx-post="{% if is_edit %}{% url 'partner-update' form.instance.pk %}{% else %}{% url 'partner-create' %}{% endif %}"
         hx-target="#modal"
         hx-swap="innerHTML">
     {% csrf_token %}
 
-    {% for field in form %}
-    <div class="form-group {% if field.errors %}has-error{% endif %}">
-      <label for="{{ field.id_for_label }}">
-        {{ field.label }}
-        {% if field.field.required %}<span class="required">*</span>{% endif %}
-      </label>
-      {{ field }}
-      {% if field.errors %}
-        <span class="field-error">{{ field.errors.0 }}</span>
+    <div class="form-columns">
+      <div class="form-col-left form-box">
+        <span class="form-box-label">Partner Details</span>
+        <div class="form-row">
+          {% with field=form.name %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+          {% endwith %}
+          {% with field=form.acronym %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+          {% endwith %}
+        </div>
+        <div class="form-row">
+          {% with field=form.area_code %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+          {% endwith %}
+          {% with field=form.sector %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+          {% endwith %}
+        </div>
+        {% for field in form %}
+          {% if field.name != "name" and field.name != "acronym" and field.name != "area_code" and field.name != "sector" %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+              <span class="field-error">{{ field.errors.0 }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if status_formset or moa_formset %}
+      <div class="form-col-right">
+        {% if status_formset %}
+          {% include "partners/formsets/status_formset.html" %}
+        {% endif %}
+        {% if moa_formset %}
+          {% include "partners/formsets/moa_formset.html" %}
+        {% endif %}
+      </div>
       {% endif %}
     </div>
-    {% endfor %}
 
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button type="submit" class="btn btn-primary">Add Partner</button>
+      <button type="submit" class="btn btn-primary">
+        {% if is_edit %}Save Changes{% else %}Add Partner{% endif %}
+      </button>
     </div>
   </form>
 </div>

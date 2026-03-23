@@ -126,6 +126,13 @@ body {
 .badge-on\ hold { background: #fef3c7; color: var(--on-hold); }
 .badge-none { background: var(--bg); color: var(--text-muted); }
 
+.current-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 /* Links */
 .moa-link {
   color: var(--primary);
@@ -170,8 +177,7 @@ body {
   border-radius: var(--radius);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   z-index: 101;
-  width: 90%;
-  max-width: 720px;
+  width: 70%;
   max-height: 85vh;
   overflow-y: auto;
 }
@@ -309,6 +315,53 @@ dd {
 }
 
 /* Forms */
+.form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+.form-row-moa-dates {
+  grid-template-columns: 3fr 3fr 1fr;
+}
+
+.form-box {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem 1rem;
+}
+
+.form-box-label {
+  position: absolute;
+  top: -0.55rem;
+  left: 0.75rem;
+  background: var(--surface);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.form-col-right .formset-section:first-child {
+  margin-top: 0;
+}
+
+.formset-section {
+  border: 1px solid var(--border);
+  margin: 1.5rem 0 1rem;
+  padding: 1.25rem 1rem 1rem;
+  border-radius: var(--radius);
+}
+
 .form-group {
   margin-bottom: 1rem;
 }

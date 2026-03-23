@@ -1,0 +1,21 @@
+<fieldset class="formset-section form-box">
+  <span class="form-box-label">Status</span>
+  {% if partner.current_status %}
+  <div class="current-status">
+    <span class="badge badge-{{ partner.current_status.status|lower }}">
+      {{ partner.current_status.status }}
+    </span>
+    <span class="text-muted">since {{ partner.current_status.date }}</span>
+  </div>
+  {% endif %}
+  {{ status_formset.management_form }}
+  {% for sf in status_formset.extra_forms %}
+  <div class="form-group {% if sf.errors %}has-error{% endif %}">
+    <label for="{{ sf.status.id_for_label }}">Set New Status</label>
+    {{ sf.status }}
+    {% if sf.errors %}
+      <span class="field-error">{{ sf.errors.0 }}</span>
+    {% endif %}
+  </div>
+  {% endfor %}
+</fieldset>
