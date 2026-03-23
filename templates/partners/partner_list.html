@@ -81,6 +81,7 @@
               hx-delete="{% url 'partner-delete' partner.pk %}"
               hx-target="closest tr"
               hx-swap="outerHTML"
+              hx-headers ='{"X-CSRFToken": "{{ csrf_token }}"}'
               onclick="event.stopPropagation();">
           <i data-lucide="trash" size="10"></i>
       </td>
