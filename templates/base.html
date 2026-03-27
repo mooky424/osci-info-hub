@@ -12,6 +12,10 @@
 <body>
   <nav class="navbar">
     <a href="{% url 'partner-list' %}" class="navbar-brand">OSCI Partner Hub</a>
+    <div class="navbar-links">
+      <a href="{% url 'partner-list' %}" class="navbar-link">Partners</a>
+      <a href="{% url 'area-engagement-list' %}" class="navbar-link">Programs</a>
+    </div>
   </nav>
 
   <main class="container">
@@ -34,6 +38,10 @@
     });
 
     document.body.addEventListener('partnerChanged', function() {
+      closeModal();
+    });
+
+    document.body.addEventListener('areaEngagementChanged', function() {
       closeModal();
     });
 

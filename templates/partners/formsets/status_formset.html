@@ -2,7 +2,7 @@
   <span class="form-box-label">Status</span>
   {% if partner.current_status %}
   <div class="current-status">
-    <span class="badge badge-{{ partner.current_status.status|lower }}">
+    <span class="badge badge-{{ partner.current_status.status|slugify }}">
       {{ partner.current_status.status }}
     </span>
     <span class="text-muted">since {{ partner.current_status.date }}</span>

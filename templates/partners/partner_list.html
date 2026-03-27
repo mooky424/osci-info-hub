@@ -42,7 +42,7 @@
       </td>
       <td>
         {% if partner.current_status %}
-          <span class="badge badge-{{ partner.current_status.status|lower }}">
+          <span class="badge badge-{{ partner.current_status.status|slugify }}">
             {{ partner.current_status.status }}
           </span>
         {% else %}

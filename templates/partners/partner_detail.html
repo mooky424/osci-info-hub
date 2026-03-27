@@ -66,7 +66,7 @@
       <tbody>
         {% for s in statuses %}
         <tr>
-          <td><span class="badge badge-{{ s.status|lower }}">{{ s.status }}</span></td>
+          <td><span class="badge badge-{{ s.status|slugify }}">{{ s.status }}</span></td>
           <td>{{ s.date }}</td>
           <td>{{ s.updated_by|default:"—" }}</td>
         </tr>
