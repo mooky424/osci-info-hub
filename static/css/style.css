@@ -618,3 +618,17 @@ dd {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Detail Grid 2/3 - 1/3 */
+.detail-grid-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .detail-grid-2-1 {
+    grid-template-columns: 1fr;
+  }
+}

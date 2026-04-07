@@ -19,36 +19,77 @@
 </div>
 
 <div id="overview" class="tab-pane active">
-  <div class="detail-section">
-    <h3>Organization Profile</h3>
-    <dl>
-      <dt>Date Established</dt>
-      <dd>{{ partner.date_established }}</dd>
-      <dt>SEC Registration</dt>
-      <dd>{{ partner.sec_registration|default:"-" }}</dd>
-      <dt>BIR Registration</dt>
-      <dd>{{ partner.bir_registration|default:"-" }}</dd>
-      <dt>TIN</dt>
-      <dd>{{ partner.tin|default:"-" }}</dd>
-      <dt>MOA Start</dt>
-      <dd>{{ partner.moa_start_date|default:"-" }}</dd>
-      <dt>MOA End</dt>
-      <dd>{{ partner.moa_end_date|default:"-" }}</dd>
-      <dt>MOA Link</dt>
-      <dd>
-        {% if partner.moa_link %}
-        <a class="moa-link" href="{{ partner.moa_link }}" target="_blank" rel="noopener">View MOA</a>
-        {% else %}
-        -
-        {% endif %}
-      </dd>
-    </dl>
-    {% if partner.vision %}<p><strong>Vision:</strong> {{ partner.vision }}</p>{% endif %}
-    {% if partner.mission %}<p><strong>Mission:</strong> {{ partner.mission }}</p>{% endif %}
-    {% if partner.goals %}<p><strong>Goals:</strong> {{ partner.goals }}</p>{% endif %}
-    {% if partner.description %}<p><strong>Description:</strong> {{ partner.description }}</p>{% endif %}
-    {% if partner.core_values %}<p><strong>Core Values:</strong> {{ partner.core_values }}</p>{% endif %}
+  <div class="detail-grid-2-1">
+    <div class="detail-section" style="margin-bottom: 0;">
+      <h3>Description</h3>
+      {% if partner.description %}
+      <p>{{ partner.description|linebreaksbr }}</p>
+      {% else %}
+      <p class="text-muted">No description provided.</p>
+      {% endif %}
+    </div>
+
+    <div class="detail-section" style="margin-bottom: 0;">
+      <h3>Organization Profile</h3>
+      <dl>
+        <dt>Date Established</dt>
+        <dd>{{ partner.date_established }}</dd>
+        <dt>SEC Registration</dt>
+        <dd>{{ partner.sec_registration|default:"-" }}</dd>
+        <dt>BIR Registration</dt>
+        <dd>{{ partner.bir_registration|default:"-" }}</dd>
+        <dt>TIN</dt>
+        <dd>{{ partner.tin|default:"-" }}</dd>
+        <dt>MOA Start</dt>
+        <dd>{{ partner.moa_start_date|default:"-" }}</dd>
+        <dt>MOA End</dt>
+        <dd>{{ partner.moa_end_date|default:"-" }}</dd>
+        <dt>MOA Link</dt>
+        <dd>
+          {% if partner.moa_link %}
+          <a class="moa-link" href="{{ partner.moa_link }}" target="_blank" rel="noopener">View MOA</a>
+          {% else %}
+          -
+          {% endif %}
+        </dd>
+      </dl>
+    </div>
   </div>
+
+  <div class="detail-grid" style="margin-bottom: 1.5rem;">
+    <div class="detail-section" style="margin-bottom: 0;">
+      <h3>Mission</h3>
+      {% if partner.mission %}
+      <p>{{ partner.mission|linebreaksbr }}</p>
+      {% else %}
+      <p class="text-muted">No mission provided.</p>
+      {% endif %}
+    </div>
+    <div class="detail-section" style="margin-bottom: 0;">
+      <h3>Vision</h3>
+      {% if partner.vision %}
+      <p>{{ partner.vision|linebreaksbr }}</p>
+      {% else %}
+      <p class="text-muted">No vision provided.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>Core Values</h3>
+    {% if partner.core_values %}
+    <p>{{ partner.core_values|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No core values provided.</p>
+    {% endif %}
+  </div>
+
+  {% if partner.goals %}
+  <div class="detail-section">
+    <h3>Goals</h3>
+    <p>{{ partner.goals|linebreaksbr }}</p>
+  </div>
+  {% endif %}
 
   <div class="detail-section">
     <h3>Contacts</h3>
