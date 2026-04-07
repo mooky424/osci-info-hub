@@ -14,7 +14,6 @@
     <a href="{% url 'partner-list' %}" class="navbar-brand">OSCI Partner Hub</a>
     <div class="navbar-links">
       <a href="{% url 'partner-list' %}" class="navbar-link">Partners</a>
-      <a href="{% url 'area-engagement-list' %}" class="navbar-link">Programs</a>
     </div>
   </nav>
 
@@ -22,42 +21,11 @@
     {% block content %}{% endblock %}
   </main>
 
-  <div id="modal-backdrop" class="modal-backdrop" onclick="closeModal()" style="display:none;"></div>
-  <div id="modal" class="modal" style="display:none;"></div>
-
   <script>
-    document.body.addEventListener('htmx:beforeSwap', function(e) {
-      if (e.detail.target.id === 'modal') {
-        if (e.detail.xhr.status === 204) {
-          e.detail.shouldSwap = false;
-          return;
-        }
-        document.getElementById('modal').style.display = 'block';
-        document.getElementById('modal-backdrop').style.display = 'block';
-      }
-    });
-
-    document.body.addEventListener('partnerChanged', function() {
-      closeModal();
-    });
-
-    document.body.addEventListener('areaEngagementChanged', function() {
-      closeModal();
-    });
-
     document.body.addEventListener('htmx:afterSettle', function() {
       lucide.createIcons();
     });
 
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-      document.getElementById('modal-backdrop').style.display = 'none';
-      document.getElementById('modal').innerHTML = '';
-    }
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeModal();
-    });
     lucide.createIcons();
   </script>
 </body>
