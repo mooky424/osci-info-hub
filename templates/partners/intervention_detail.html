@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ intervention.name }} - {{ intervention.community_partner.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ intervention.name }}</h1>
+  <div class="header-actions">
+    <a class="btn btn-secondary" href="{% url 'partner-detail' intervention.community_partner.pk %}">Back to Partner</a>
+    <a class="btn btn-primary" href="{% url 'intervention-update' intervention.pk %}">Edit Intervention</a>
+  </div>
+</div>
+
+<div class="detail-section form-box">
+  <span class="form-box-label">Intervention Details</span>
+  
+  <div class="detail-grid-2-1" style="grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <div>
+      <div class="detail-group">
+        <label>Formator</label>
+        <p>{% if intervention.formator %}{{ intervention.formator.get_full_name|default:intervention.formator.username }}{% else %}N/A{% endif %}</p>
+      </div>
+      <div class="detail-group">
+        <label>Date Started</label>
+        <p>{{ intervention.date_started|date:"M d, Y"|default:"N/A" }}</p>
+      </div>
+      <div class="detail-group">
+        <label>Date Ended</label>
+        <p>{{ intervention.date_ended|date:"M d, Y"|default:"N/A" }}</p>
+      </div>
+    </div>
+    
+    <div>
+      <div class="detail-group">
+        <label>Output Link</label>
+        <p>
+          {% if intervention.output_link %}
+          <a href="{{ intervention.output_link }}" target="_blank">{{ intervention.output_link }}</a>
+          {% else %}
+          <span class="text-muted">N/A</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="detail-group">
+        <label>Pictures Link</label>
+        <p>
+          {% if intervention.pictures_link %}
+          <a href="{{ intervention.pictures_link }}" target="_blank">{{ intervention.pictures_link }}</a>
+          {% else %}
+          <span class="text-muted">N/A</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="detail-group">
+        <label>Evaluation Link</label>
+        <p>
+          {% if intervention.evaluation_link %}
+          <a href="{{ intervention.evaluation_link }}" target="_blank">{{ intervention.evaluation_link }}</a>
+          {% else %}
+          <span class="text-muted">N/A</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border);" />
+
+  <div class="detail-section">
+    <h3>Description</h3>
+    {% if intervention.description %}
+    <p>{{ intervention.description|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No description provided.</p>
+    {% endif %}
+  </div>
+
+  <div class="detail-section">
+    <h3>Outcomes</h3>
+    {% if intervention.outcomes %}
+    <p>{{ intervention.outcomes|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No outcomes provided.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="detail-section form-box" style="margin-top: 24px;">
+  <span class="form-box-label">Partner's Socioeconomic Profile</span>
+  {% include "partners/partials/socioeconomic_cards.html" with profiles=partner.socioeconomic_profiles.all %}
+</div>
+{% endblock %}

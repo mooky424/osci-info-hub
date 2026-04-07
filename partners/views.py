@@ -456,6 +456,10 @@ def program_create(request, partner_pk):
         {"form": form, "partner": partner, "title": "Add Program", "section_label": "Program Details"}
     )
 
+def program_detail(request, pk):
+    program = get_object_or_404(Programs, pk=pk)
+    return render(request, "partners/program_detail.html", {"program": program, "partner": program.community_partner})
+
 def program_update(request, pk):
     program = get_object_or_404(Programs, pk=pk)
     partner = program.community_partner
@@ -495,6 +499,10 @@ def intervention_create(request, partner_pk):
         "partners/generic_sub_form.html",
         {"form": form, "partner": partner, "title": "Add Past Intervention", "section_label": "Intervention Details"}
     )
+
+def intervention_detail(request, pk):
+    intervention = get_object_or_404(PastInterventions, pk=pk)
+    return render(request, "partners/intervention_detail.html", {"intervention": intervention, "partner": intervention.community_partner})
 
 def intervention_update(request, pk):
     intervention = get_object_or_404(PastInterventions, pk=pk)

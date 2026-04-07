@@ -376,6 +376,7 @@ dd {
 }
 
 .form-box {
+  background: var(--surface);
   position: relative;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -614,6 +615,49 @@ dd {
   animation: fadeIn 0.3s ease-in-out;
 }
 
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.profile-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.profile-card h4 {
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+}
+
+.profile-list dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.profile-list dd {
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
@@ -631,4 +675,16 @@ dd {
   .detail-grid-2-1 {
     grid-template-columns: 1fr;
   }
+}
+
+/* Unified Card Layout */
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.detail-card > *:last-child {
+  margin-bottom: 0;
 }

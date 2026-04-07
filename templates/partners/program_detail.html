@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ program.name }} - {{ program.community_partner.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ program.name }}</h1>
+  <div class="header-actions">
+    <a class="btn btn-secondary" href="{% url 'partner-detail' program.community_partner.pk %}">Back to Partner</a>
+    <a class="btn btn-primary" href="{% url 'program-update' program.pk %}">Edit Program</a>
+  </div>
+</div>
+
+<div class="detail-section form-box">
+  <span class="form-box-label">Program Details</span>
+  
+  <div class="detail-section">
+    <h3>Description</h3>
+    {% if program.description %}
+    <p>{{ program.description|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No description provided.</p>
+    {% endif %}
+  </div>
+
+  <div class="detail-section">
+    <h3>Objectives</h3>
+    {% if program.objectives %}
+    <p>{{ program.objectives|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No objectives provided.</p>
+    {% endif %}
+  </div>
+
+  <div class="detail-section">
+    <h3>Expected Outcomes</h3>
+    {% if program.expected_outcomes %}
+    <p>{{ program.expected_outcomes|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No expected outcomes provided.</p>
+    {% endif %}
+  </div>
+
+  <div class="detail-section">
+    <h3>Skills Needed</h3>
+    {% if program.skills_needed %}
+    <p>{{ program.skills_needed|linebreaksbr }}</p>
+    {% else %}
+    <p class="text-muted">No skills needed provided.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="detail-section form-box" style="margin-top: 24px;">
+  <span class="form-box-label">Partner's Socioeconomic Profile</span>
+  {% include "partners/partials/socioeconomic_cards.html" with profiles=partner.socioeconomic_profiles.all %}
+</div>
+{% endblock %}

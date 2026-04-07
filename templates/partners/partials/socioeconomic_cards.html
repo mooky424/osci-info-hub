@@ -1,0 +1,55 @@
+{% if profiles %}
+  {% for profile in profiles %}
+  <div class="profile-grid">
+    <div class="profile-card">
+      <h4>Demographics and Culture</h4>
+      <dl class="profile-list">
+        <dt>Population Size</dt><dd>{{ profile.population_size }}</dd>
+        <dt>Population Breakdown</dt><dd>{{ profile.population_breakdown|default:"-" }}</dd>
+        <dt>Sociocultural Profile</dt><dd>{{ profile.sociocultural_profile|default:"-" }}</dd>
+      </dl>
+    </div>
+
+    <div class="profile-card">
+      <h4>Economy and Livelihood</h4>
+      <dl class="profile-list">
+        <dt>Livelihoods</dt><dd>{{ profile.livelihoods|default:"-" }}</dd>
+        <dt>Resources Available</dt><dd>{{ profile.resources_available|default:"-" }}</dd>
+        <dt>Vulnerabilities</dt><dd>{{ profile.vulnerabilities|default:"-" }}</dd>
+      </dl>
+    </div>
+
+    <div class="profile-card">
+      <h4>Health and Education</h4>
+      <dl class="profile-list">
+        <dt>Health Profile</dt><dd>{{ profile.health_profile|default:"-" }}</dd>
+        <dt>Health Facilities</dt><dd>{{ profile.health_facilities|default:"-" }}</dd>
+        <dt>Education Facility</dt><dd>{{ profile.education_facility|default:"-" }}</dd>
+      </dl>
+    </div>
+
+    <div class="profile-card">
+      <h4>Infrastructure and Utilities</h4>
+      <dl class="profile-list">
+        <dt>Housing</dt><dd>{{ profile.housing|default:"-" }}</dd>
+        <dt>Transportation</dt><dd>{{ profile.transportation|default:"-" }}</dd>
+        <dt>Electricity</dt><dd>{{ profile.electricity|default:"-" }}</dd>
+        <dt>Water</dt><dd>{{ profile.water|default:"-" }}</dd>
+        <dt>Wet Market</dt><dd>{{ profile.wet_market|default:"-" }}</dd>
+        <dt>Telecommunication</dt><dd>{{ profile.telecommunication|default:"-" }}</dd>
+        <dt>Others</dt><dd>{{ profile.others|default:"-" }}</dd>
+      </dl>
+    </div>
+
+    <div class="profile-card">
+      <h4>Governance and Networks</h4>
+      <dl class="profile-list">
+        <dt>Political Profile</dt><dd>{{ profile.political_profile|default:"-" }}</dd>
+        <dt>Partner Networks</dt><dd>{{ profile.partner_networks|default:"-" }}</dd>
+      </dl>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <p class="text-muted">No socioeconomic profile recorded.</p>
+{% endif %}
