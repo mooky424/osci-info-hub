@@ -1,88 +1,220 @@
-<div class="modal-header">
-  <h2>
-    {% if is_edit %}
-    Edit Partner Area
-    {% else %}
-    Add Partner Area
-    {% endif %}
-  </h2>
-  <button class="modal-close" onclick="closeModal()">&times;</button>
+{% extends "base.html" %}
+
+{% block title %}
+{% if is_edit %}
+Edit {{ form.instance.name }} - OSCI Partner Hub
+{% else %}
+Create Partner - Step {{ step }} - OSCI Partner Hub
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  {% if is_edit %}
+  <h1>Edit Partner</h1>
+  <a class="btn btn-secondary" href="{% url 'partner-detail' form.instance.pk %}">Cancel</a>
+  {% else %}
+  <h1>Create Partner</h1>
+  <div class="header-actions">
+    <a class="btn btn-secondary" href="{% url 'partner-list' %}">Cancel</a>
+    <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=1&reset=1">Start Over</a>
+  </div>
+  {% endif %}
 </div>
 
-<div class="modal-body">
-  <form hx-post="{% if is_edit %}{% url 'partner-update' form.instance.pk %}{% else %}{% url 'partner-create' %}{% endif %}"
-        hx-target="#modal"
-        hx-swap="innerHTML">
-    {% csrf_token %}
+{% if not is_edit %}
+<div class="stepper-container" aria-label="Partner creation progress">
+  <div class="stepper" data-step="{{ step }}">
+    <div class="stepper-progress"></div>
+    
+    <div class="step {% if step|add:0 > 1 %}completed{% elif step|add:0 == 1 %}active{% endif %}">
+      <div class="step-circle">{% if step|add:0 > 1 %}&#10003;{% else %}1{% endif %}</div>
+      <div class="step-label">Details</div>
+    </div>
+    
+    <div class="step {% if step|add:0 > 2 %}completed{% elif step|add:0 == 2 %}active{% endif %}">
+      <div class="step-circle">{% if step|add:0 > 2 %}&#10003;{% else %}2{% endif %}</div>
+      <div class="step-label">Socioeconomic</div>
+    </div>
+    
+    <div class="step {% if step|add:0 > 3 %}completed{% elif step|add:0 == 3 %}active{% endif %} {% if not include_programs and step|add:0 > 1 %}skipped{% endif %}">
+      <div class="step-circle">{% if step|add:0 > 3 %}&#10003;{% elif not include_programs and step|add:0 > 1 %}-{% else %}3{% endif %}</div>
+      <div class="step-label">Programs</div>
+    </div>
+    
+    <div class="step {% if step|add:0 > 4 %}completed{% elif step|add:0 == 4 %}active{% endif %} {% if not include_past_interventions and step|add:0 > 1 %}skipped{% endif %}">
+      <div class="step-circle">{% if step|add:0 > 4 %}&#10003;{% elif not include_past_interventions and step|add:0 > 1 %}-{% else %}4{% endif %}</div>
+      <div class="step-label">Interventions</div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
-    <div class="form-columns">
-      <div class="form-col-left form-box">
-        <span class="form-box-label">Partner Details</span>
-        <div class="form-row">
-          {% with field=form.name %}
+<form method="post">
+  {% csrf_token %}
+
+  {% if is_edit or step == 1 %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Partner Details</span>
+    <div class="two-column-grid">
+      <div class="col-left">
+        {% for field in form %}
+          {% if field.name in "name,date_established,sec_registration,bir_registration,tin,moa_start_date,moa_end_date,moa_link" %}
           <div class="form-group {% if field.errors %}has-error{% endif %}">
             <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
             {{ field }}
             {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
           </div>
-          {% endwith %}
-          {% with field=form.acronym %}
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="col-right">
+        {% for field in form %}
+          {% if field.name in "vision,mission,goals,description,core_values" %}
+          <div class="form-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_edit or step == 1 %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Contacts</span>
+    {{ contact_formset.management_form }}
+    {% for cf in contact_formset %}
+      {{ cf.id }}
+      <div class="form-row">
+        {% for field in cf.visible_fields %}
           <div class="form-group {% if field.errors %}has-error{% endif %}">
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field }}
             {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
           </div>
-          {% endwith %}
-        </div>
-        <div class="form-row">
-          {% with field=form.area_code %}
-          <div class="form-group {% if field.errors %}has-error{% endif %}">
-            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
-            {{ field }}
-            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
-          </div>
-          {% endwith %}
-          {% with field=form.sector %}
-          <div class="form-group {% if field.errors %}has-error{% endif %}">
-            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
-            {{ field }}
-            {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
-          </div>
-          {% endwith %}
-        </div>
-        {% for field in form %}
-          {% if field.name != "name" and field.name != "acronym" and field.name != "area_code" and field.name != "sector" %}
-          <div class="form-group {% if field.errors %}has-error{% endif %}">
-            <label for="{{ field.id_for_label }}">
-              {{ field.label }}
-              {% if field.field.required %}<span class="required">*</span>{% endif %}
-            </label>
-            {{ field }}
-            {% if field.errors %}
-              <span class="field-error">{{ field.errors.0 }}</span>
-            {% endif %}
-          </div>
-          {% endif %}
         {% endfor %}
       </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-      {% if status_formset or moa_formset %}
-      <div class="form-col-right">
-        {% if status_formset %}
-          {% include "partners/formsets/status_formset.html" %}
-        {% endif %}
-        {% if moa_formset %}
-          {% include "partners/formsets/moa_formset.html" %}
-        {% endif %}
+  {% if step == 1 and not is_edit %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Optional Sections</span>
+    <div class="form-group {% if form.include_programs.errors %}has-error{% endif %}">
+      <label for="{{ form.include_programs.id_for_label }}">{{ form.include_programs }} Include Programs</label>
+      {% if form.include_programs.errors %}<span class="field-error">{{ form.include_programs.errors.0 }}</span>{% endif %}
+    </div>
+    <div class="form-group {% if form.include_past_interventions.errors %}has-error{% endif %}">
+      <label for="{{ form.include_past_interventions.id_for_label }}">{{ form.include_past_interventions }} Include Past Interventions</label>
+      {% if form.include_past_interventions.errors %}<span class="field-error">{{ form.include_past_interventions.errors.0 }}</span>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_edit or step == 2 %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Socioeconomic Profile</span>
+    {{ socioeconomic_formset.management_form }}
+    {% for sf in socioeconomic_formset %}
+      {{ sf.id }}
+      <div class="form-row">
+      {% for field in sf.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
       </div>
-      {% endif %}
-    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <div class="form-actions">
-      <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button type="submit" class="btn btn-primary">
-        {% if is_edit %}Save Changes{% else %}Add Partner{% endif %}
-      </button>
-    </div>
-  </form>
-</div>
+  {% if is_edit or step == 3 %}
+  {% if is_edit or include_programs %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Programs</span>
+    {{ program_formset.management_form }}
+    {% for pf in program_formset %}
+      {{ pf.id }}
+      <div class="form-row">
+      {% for field in pf.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+      </div>
+      <hr>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">Programs were skipped on step 1.</p>
+  {% endif %}
+  {% endif %}
+
+  {% if is_edit or step == 4 %}
+  {% if is_edit or include_past_interventions %}
+  <div class="detail-section form-box">
+    <span class="form-box-label">Past Interventions</span>
+    {{ intervention_formset.management_form }}
+    {% for inf in intervention_formset %}
+      {{ inf.id }}
+      <div class="form-row">
+      {% for field in inf.visible_fields %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+      </div>
+      <hr>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted">Past interventions were skipped on step 1.</p>
+  {% endif %}
+  {% endif %}
+
+  <div class="form-actions">
+    {% if not is_edit %}
+      {% if step == 2 %}
+      <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=1">Back</a>
+      {% elif step == 3 %}
+      <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=2">Back</a>
+      {% elif step == 4 %}
+        {% if include_programs %}
+        <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=3">Back</a>
+        {% else %}
+        <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=2">Back</a>
+        {% endif %}
+      {% endif %}
+    {% endif %}
+
+    {% if not is_edit %}
+    <button type="submit" name="save_draft" value="1" class="btn btn-secondary">Save Draft for Later</button>
+    {% endif %}
+
+    {% if is_edit %}
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    {% else %}
+      {% if step == 1 %}
+      <button type="submit" class="btn btn-primary">Continue to Socioeconomic Profile</button>
+      {% elif step == 2 %}
+      <button type="submit" class="btn btn-primary">Continue</button>
+      {% elif step == 3 %}
+      <button type="submit" class="btn btn-primary">Continue</button>
+      {% else %}
+      <button type="submit" class="btn btn-primary">Create Partner</button>
+      {% endif %}
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

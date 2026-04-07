@@ -9,108 +9,78 @@ contact_validator = RegexValidator(
 
 
 class Partner(models.Model):
-    SECTOR_CHOICES = [
-        ("Urban Poor", "Urban Poor"),
-        ("WSGM", "WSGM"),
-        ("PWD", "PWD"),
-        ("PDL", "PDL"),
-        ("Education", "Education"),
-        ("Labor", "Labor"),
-        ("Agriculture", "Agriculture"),
-        ("IP", "IP"),
-        ("Health", "Health"),
-        ("Environment", "Environment"),
-    ]
-
-    NCR_CHOICES = [
-        ("NCR+", "NCR+"),
-        ("Province", "Province"),
-    ]
-
-    name = models.CharField(max_length=100)
-    acronym = models.CharField(max_length=20, blank=True)
-    area_code = models.CharField(max_length=20, unique=True)
-    sector = models.CharField(max_length=50, choices=SECTOR_CHOICES)
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    vision = models.TextField(blank=True)
+    mission = models.TextField(blank=True)
+    goals = models.TextField(blank=True)
     description = models.TextField(blank=True)
-    address = models.CharField(max_length=255)
-    google_maps_link = models.URLField(max_length=500, blank=True)
-    ncr_or_province = models.CharField(max_length=10, choices=NCR_CHOICES, blank=True)
-    point_person = models.CharField(max_length=100)
-    head_of_office = models.CharField(max_length=100)
-    contact_no = models.CharField(max_length=11, validators=[contact_validator])
-    contact_email = models.EmailField(blank=True)
-
-    def __str__(self):
-        if self.acronym:
-            return f"{self.name} ({self.acronym})"
-        return self.name
-
-    @property
-    def current_status(self):
-        return self.statuses.order_by("-date").first()
-
-    @property
-    def active_contract(self):
-        from django.utils import timezone
-
-        return (
-            self.moas.filter(termination_date__gte=timezone.now().date())
-            .order_by("-date_issued")
-            .first()
-        )
-
-
-class PartnerStatus(models.Model):
-    STATUS_CHOICES = [
-        ("Active", "Active"),
-        ("Inactive", "Inactive"),
-        ("On Hold", "On Hold"),
-    ]
-
-    partner = models.ForeignKey(
-        Partner,
-        on_delete=models.CASCADE,
-        related_name="statuses",
-    )
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    date = models.DateField(auto_now_add=True)
-    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-
-    class Meta:
-        ordering = ["-date"]
-        get_latest_by = "date"
-
-    def __str__(self):
-        return f"{self.partner} - {self.status} ({self.date})"
-
-
-class MOA(models.Model):
-    partner = models.ForeignKey(
-        Partner,
-        on_delete=models.CASCADE,
-        related_name="moas",
-    )
-    date_issued = models.DateField()
-    termination_date = models.DateField()
-    with_amendment = models.BooleanField(default=False)
-    programs_included = models.TextField(blank=True)
-    formator = models.ForeignKey(
+    core_values = models.TextField(blank=True)
+    date_established = models.DateField()
+    sec_registration = models.CharField(max_length=255)
+    bir_registration = models.CharField(max_length=255)
+    tin = models.CharField(max_length=255)
+    moa_start_date = models.DateField(blank=True, null=True)
+    moa_end_date = models.DateField(blank=True, null=True)
+    moa_link = models.URLField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="moas_as_formator",
+        blank=True,
+        related_name="updated_partners",
     )
-    scanned_moa = models.URLField(max_length=500, blank=True)
 
-    class Meta:
-        ordering = ["-date_issued"]
-        get_latest_by = "date_issued"
-        verbose_name = "MOA"
-        verbose_name_plural = "MOAs"
+class Contact(models.Model):
+    id = models.AutoField(primary_key=True)
+    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='contacts')
+    name = models.CharField(max_length=255)
+    position = models.CharField(max_length=255)
+    designation = models.CharField(max_length=255)
+    contact_number = models.CharField(max_length=11, validators=[contact_validator])
+    email = models.EmailField(blank=True)
 
-    def __str__(self):
-        return f"{self.partner} MOA ({self.date_issued} - {self.termination_date})"
+class Programs(models.Model):
+    id = models.AutoField(primary_key=True)
+    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='programs')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    objectives = models.TextField(blank=True)
+    expected_outcomes = models.TextField(blank=True)
+    skills_needed = models.TextField(blank=True)
 
-    @property
-    def duration(self):
-        return (self.termination_date - self.date_issued).days
+class SocioEconomicProfile(models.Model):
+    id = models.AutoField(primary_key=True)
+    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='socioeconomic_profiles')
+    population_size = models.IntegerField()
+    population_breakdown = models.TextField(blank=True)
+    livelihoods = models.TextField(blank=True)
+    health_profile = models.TextField(blank=True)
+    sociocultural_profile = models.TextField(blank=True)
+    political_profile = models.TextField(blank=True)
+    partner_networks = models.TextField(blank=True)
+    resources_available = models.TextField(blank=True)
+    vulnerabilities = models.TextField(blank=True)
+    housing = models.TextField(blank=True)
+    transportation = models.TextField(blank=True)
+    electricity = models.TextField(blank=True)
+    water = models.TextField(blank=True)
+    wet_market = models.TextField(blank=True)
+    health_facilities = models.TextField(blank=True)
+    education_facility = models.TextField(blank=True)
+    telecommunication = models.TextField(blank=True)
+    others = models.TextField(blank=True)
+
+class PastInterventions(models.Model):
+    id = models.AutoField(primary_key=True)
+    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='past_interventions')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    outcomes = models.TextField(blank=True)
+    formator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)    
+    date_started = models.DateField()
+    date_ended = models.DateField(blank=True, null=True)
+    output_link = models.URLField(blank=True)
+    pictures_link = models.URLField(blank=True)
+    evaluation_link = models.URLField(blank=True)

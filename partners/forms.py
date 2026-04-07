@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import MOA, Partner, PartnerStatus
+from .models import Contact, Partner, PastInterventions, Programs, SocioEconomicProfile
 
 
 class PartnerForm(forms.ModelForm):
@@ -9,68 +9,136 @@ class PartnerForm(forms.ModelForm):
         model = Partner
         fields = [
             "name",
-            "acronym",
-            "area_code",
-            "sector",
+            "vision",
+            "mission",
+            "goals",
             "description",
-            "address",
-            "google_maps_link",
-            "ncr_or_province",
-            "point_person",
-            "head_of_office",
-            "contact_no",
-            "contact_email",
+            "core_values",
+            "date_established",
+            "sec_registration",
+            "bir_registration",
+            "tin",
+            "moa_start_date",
+            "moa_end_date",
+            "moa_link",
         ]
         widgets = {
+            "vision": forms.Textarea(attrs={"rows": 3}),
+            "mission": forms.Textarea(attrs={"rows": 3}),
+            "goals": forms.Textarea(attrs={"rows": 3}),
             "description": forms.Textarea(attrs={"rows": 3}),
+            "core_values": forms.Textarea(attrs={"rows": 3}),
+            "date_established": forms.DateInput(attrs={"type": "date"}),
+            "moa_start_date": forms.DateInput(attrs={"type": "date"}),
+            "moa_end_date": forms.DateInput(attrs={"type": "date"}),
         }
 
-    def __init__(self, *args, **kwargs):
-        is_edit = kwargs.pop("is_edit", False)
-        super().__init__(*args, **kwargs)
-        if is_edit:
-            self.fields["name"].disabled = True
+
+class PartnerCreateStepOneForm(PartnerForm):
+    include_programs = forms.BooleanField(required=False, initial=False)
+    include_past_interventions = forms.BooleanField(required=False, initial=False)
 
 
-class PartnerStatusForm(forms.ModelForm):
+class ContactForm(forms.ModelForm):
     class Meta:
-        model = PartnerStatus
-        fields = ["status"]
+        model = Contact
+        fields = ["name", "position", "designation", "contact_number", "email"]
 
 
-class MOAForm(forms.ModelForm):
+class ProgramForm(forms.ModelForm):
     class Meta:
-        model = MOA
+        model = Programs
         fields = [
-            "date_issued",
-            "termination_date",
-            "with_amendment",
-            "programs_included",
-            "formator",
-            "scanned_moa",
+            "name",
+            "description",
+            "objectives",
+            "expected_outcomes",
+            "skills_needed",
         ]
-        labels = {
-            "with_amendment": "Amended?",
-        }
         widgets = {
-            "date_issued": forms.DateInput(attrs={"type": "date"}),
-            "termination_date": forms.DateInput(attrs={"type": "date"}),
-            "programs_included": forms.Textarea(attrs={"rows": 2}),
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "objectives": forms.Textarea(attrs={"rows": 2}),
+            "expected_outcomes": forms.Textarea(attrs={"rows": 2}),
+            "skills_needed": forms.Textarea(attrs={"rows": 2}),
         }
 
 
-PartnerStatusFormSet = inlineformset_factory(
+class SocioEconomicProfileForm(forms.ModelForm):
+    class Meta:
+        model = SocioEconomicProfile
+        exclude = ["community_partner"]
+        widgets = {
+            "population_breakdown": forms.Textarea(attrs={"rows": 2}),
+            "livelihoods": forms.Textarea(attrs={"rows": 2}),
+            "health_profile": forms.Textarea(attrs={"rows": 2}),
+            "sociocultural_profile": forms.Textarea(attrs={"rows": 2}),
+            "political_profile": forms.Textarea(attrs={"rows": 2}),
+            "partner_networks": forms.Textarea(attrs={"rows": 2}),
+            "resources_available": forms.Textarea(attrs={"rows": 2}),
+            "vulnerabilities": forms.Textarea(attrs={"rows": 2}),
+            "housing": forms.Textarea(attrs={"rows": 2}),
+            "transportation": forms.Textarea(attrs={"rows": 2}),
+            "electricity": forms.Textarea(attrs={"rows": 2}),
+            "water": forms.Textarea(attrs={"rows": 2}),
+            "wet_market": forms.Textarea(attrs={"rows": 2}),
+            "health_facilities": forms.Textarea(attrs={"rows": 2}),
+            "education_facility": forms.Textarea(attrs={"rows": 2}),
+            "telecommunication": forms.Textarea(attrs={"rows": 2}),
+            "others": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class PastInterventionForm(forms.ModelForm):
+    class Meta:
+        model = PastInterventions
+        fields = [
+            "name",
+            "description",
+            "outcomes",
+            "formator",
+            "date_started",
+            "date_ended",
+            "output_link",
+            "pictures_link",
+            "evaluation_link",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 2}),
+            "outcomes": forms.Textarea(attrs={"rows": 2}),
+            "date_started": forms.DateInput(attrs={"type": "date"}),
+            "date_ended": forms.DateInput(attrs={"type": "date"}),
+        }
+
+
+ContactFormSet = inlineformset_factory(
     Partner,
-    PartnerStatus,
-    form=PartnerStatusForm,
+    Contact,
+    form=ContactForm,
     extra=1,
     can_delete=False,
 )
 
-MOAFormSet = inlineformset_factory(
+ProgramFormSet = inlineformset_factory(
     Partner,
-    MOA,
-    form=MOAForm,
+    Programs,
+    form=ProgramForm,
+    extra=1,
+    can_delete=False,
+)
+
+SocioEconomicProfileFormSet = inlineformset_factory(
+    Partner,
+    SocioEconomicProfile,
+    form=SocioEconomicProfileForm,
+    extra=1,
+    max_num=1,
+    can_delete=False,
+)
+
+PastInterventionFormSet = inlineformset_factory(
+    Partner,
+    PastInterventions,
+    form=PastInterventionForm,
     extra=1,
     can_delete=False,
 )

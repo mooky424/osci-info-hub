@@ -4,91 +4,40 @@
 
 {% block content %}
 <div class="page-header">
-  <h1>Partner Areas</h1>
-  <button class="btn btn-primary"
-          hx-get="{% url 'partner-create' %}"
-          hx-target="#modal"
-          hx-swap="innerHTML">
-    Add Partner
-  </button>
+  <h1>Community Partners</h1>
+  <a class="btn btn-primary" href="{% url 'partner-create' %}">Add Partner</a>
 </div>
 
-<table class="table"
-       hx-get="{% url 'partner-list' %}"
-       hx-trigger="partnerChanged from:body"
-       hx-select="table.table"
-       hx-swap="outerHTML">
+<table class="table">
   <thead>
     <tr>
-      <th>Partner</th>
-      <th>Status</th>
+      <th>Name</th>
       <th>MOA</th>
       <th>Last Updated</th>
-      <th>Actions</th>
+      <th>Updated By</th>
     </tr>
   </thead>
   <tbody>
     {% for partner in partners %}
-    <tr class="clickable-row"
-        hx-get="{% url 'partner-detail' partner.pk %}"
-        hx-target="#modal"
-        hx-swap="innerHTML"
-        hx-select="unset">
+    <tr>
       <td>
-        <span class="partner-name">{{ partner.name }}</span>
-        {% if partner.acronym %}
-          <span class="partner-acronym">({{ partner.acronym }})</span>
-        {% endif %}
+        <a class="partner-name" href="{% url 'partner-detail' partner.pk %}">{{ partner.name }}</a>
       </td>
       <td>
-        {% if partner.current_status %}
-          <span class="badge badge-{{ partner.current_status.status|slugify }}">
-            {{ partner.current_status.status }}
-          </span>
+        {% if partner.moa_link %}
+        <a class="moa-link" href="{{ partner.moa_link }}" target="_blank" rel="noopener">View MOA</a>
+        {% elif partner.moa_start_date or partner.moa_end_date %}
+        {{ partner.moa_start_date|default:"-" }} to {{ partner.moa_end_date|default:"-" }}
         {% else %}
-          <span class="badge badge-none">No status</span>
+        -
         {% endif %}
       </td>
-      <td>
-        {% if partner.active_contract and partner.active_contract.scanned_moa %}
-          <a href="{{ partner.active_contract.scanned_moa }}"
-             target="_blank"
-             rel="noopener"
-             onclick="event.stopPropagation();"
-             class="moa-link">
-            View MOA
-          </a>
-        {% else %}
-          <span class="text-muted">—</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if partner.current_status %}
-          {{ partner.current_status.date }}
-        {% else %}
-          <span class="text-muted">—</span>
-        {% endif %}
-      </td>
-      <td>
-        <button class="btn-icon btn-edit"
-              hx-get="{% url 'partner-update' partner.pk %}"
-              hx-target="#modal"
-              hx-swap="innerHTML"
-              onclick="event.stopPropagation();">
-          <i data-lucide="edit" size="10"></i>
-        </button>
-        <button class="btn-icon btn-delete"
-              hx-delete="{% url 'partner-delete' partner.pk %}"
-              hx-target="closest tr"
-              hx-swap="outerHTML"
-              hx-headers ='{"X-CSRFToken": "{{ csrf_token }}"}'
-              onclick="event.stopPropagation();">
-          <i data-lucide="trash" size="10"></i>
-      </td>
+      <td>{{ partner.updated_at|date:"Y-m-d H:i" }}</td>
+      <td>{{ partner.updated_by|default:"-" }}</td>
     </tr>
     {% empty %}
     <tr>
-      <td colspan="4" class="empty-state">No partner areas found.</td>
+      <td colspan="4" class="empty-state">No partners found.</td>
     </tr>
     {% endfor %}
   </tbody>

@@ -1,116 +1,169 @@
-<div class="modal-header">
-  <h2>{{ partner }}</h2>
-  <button class="modal-close" onclick="closeModal()">&times;</button>
+{% extends "base.html" %}
+
+{% block title %}{{ partner.name }} - OSCI Partner Hub{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ partner.name }}</h1>
+  <div>
+    <a class="btn btn-secondary" href="{% url 'partner-list' %}">Back to Partners</a>
+    <a class="btn btn-primary" href="{% url 'partner-update' partner.pk %}">Edit Partner</a>
+  </div>
 </div>
 
-<div class="modal-body">
-  <div class="detail-grid">
-    <div class="detail-section">
-      <h3>General Information</h3>
-      <dl>
-        <dt>Area Code</dt>
-        <dd>{{ partner.area_code }}</dd>
+<div class="tabs-header">
+  <button class="tab-btn active" onclick="switchTab(event, 'overview')">Overview</button>
+  <button class="tab-btn" onclick="switchTab(event, 'programs')">Programs ({{ programs|length }})</button>
+  <button class="tab-btn" onclick="switchTab(event, 'socioeconomic')">Socioeconomic Profile</button>
+  <button class="tab-btn" onclick="switchTab(event, 'interventions')">Past Interventions ({{ past_interventions|length }})</button>
+</div>
 
-        <dt>Sector</dt>
-        <dd>{{ partner.sector }}</dd>
-
-        <dt>Address</dt>
-        <dd>
-          {{ partner.address }}
-          {% if partner.google_maps_link %}
-            <a href="{{ partner.google_maps_link }}" target="_blank" rel="noopener" class="map-link">Map</a>
-          {% endif %}
-        </dd>
-
-        <dt>Location</dt>
-        <dd>{{ partner.ncr_or_province|default:"—" }}</dd>
-
-        {% if partner.description %}
-        <dt>Description</dt>
-        <dd>{{ partner.description }}</dd>
+<div id="overview" class="tab-pane active">
+  <div class="detail-section">
+    <h3>Organization Profile</h3>
+    <dl>
+      <dt>Date Established</dt>
+      <dd>{{ partner.date_established }}</dd>
+      <dt>SEC Registration</dt>
+      <dd>{{ partner.sec_registration|default:"-" }}</dd>
+      <dt>BIR Registration</dt>
+      <dd>{{ partner.bir_registration|default:"-" }}</dd>
+      <dt>TIN</dt>
+      <dd>{{ partner.tin|default:"-" }}</dd>
+      <dt>MOA Start</dt>
+      <dd>{{ partner.moa_start_date|default:"-" }}</dd>
+      <dt>MOA End</dt>
+      <dd>{{ partner.moa_end_date|default:"-" }}</dd>
+      <dt>MOA Link</dt>
+      <dd>
+        {% if partner.moa_link %}
+        <a class="moa-link" href="{{ partner.moa_link }}" target="_blank" rel="noopener">View MOA</a>
+        {% else %}
+        -
         {% endif %}
-      </dl>
-    </div>
-
-    <div class="detail-section">
-      <h3>Contacts</h3>
-      <dl>
-        <dt>Point Person</dt>
-        <dd>{{ partner.point_person }}</dd>
-
-        <dt>Head of Office</dt>
-        <dd>{{ partner.head_of_office }}</dd>
-
-        <dt>Contact No.</dt>
-        <dd>{{ partner.contact_no }}</dd>
-
-        {% if partner.contact_email %}
-        <dt>Email</dt>
-        <dd><a href="mailto:{{ partner.contact_email }}">{{ partner.contact_email }}</a></dd>
-        {% endif %}
-      </dl>
-    </div>
+      </dd>
+    </dl>
+    {% if partner.vision %}<p><strong>Vision:</strong> {{ partner.vision }}</p>{% endif %}
+    {% if partner.mission %}<p><strong>Mission:</strong> {{ partner.mission }}</p>{% endif %}
+    {% if partner.goals %}<p><strong>Goals:</strong> {{ partner.goals }}</p>{% endif %}
+    {% if partner.description %}<p><strong>Description:</strong> {{ partner.description }}</p>{% endif %}
+    {% if partner.core_values %}<p><strong>Core Values:</strong> {{ partner.core_values }}</p>{% endif %}
   </div>
 
   <div class="detail-section">
-    <h3>Status History</h3>
-    {% if statuses %}
+    <h3>Contacts</h3>
+    {% if contacts %}
     <table class="table table-sm">
       <thead>
-        <tr>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Updated By</th>
-        </tr>
+        <tr><th>Name</th><th>Position</th><th>Designation</th><th>Contact No.</th><th>Email</th></tr>
       </thead>
       <tbody>
-        {% for s in statuses %}
+        {% for contact in contacts %}
         <tr>
-          <td><span class="badge badge-{{ s.status|slugify }}">{{ s.status }}</span></td>
-          <td>{{ s.date }}</td>
-          <td>{{ s.updated_by|default:"—" }}</td>
+          <td>{{ contact.name }}</td>
+          <td>{{ contact.position }}</td>
+          <td>{{ contact.designation }}</td>
+          <td>{{ contact.contact_number }}</td>
+          <td>{% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}-{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-      <p class="text-muted">No status history.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">No contacts recorded.</p>{% endif %}
   </div>
+</div>
 
+<div id="programs" class="tab-pane">
   <div class="detail-section">
-    <h3>MOA History</h3>
-    {% if moas %}
+    <h3>Programs</h3>
+    {% if programs %}
     <table class="table table-sm">
       <thead>
-        <tr>
-          <th>Issued</th>
-          <th>Expires</th>
-          <th>Programs</th>
-          <th>Amendment</th>
-          <th>Document</th>
-        </tr>
+        <tr><th>Name</th><th>Description</th><th>Objectives</th><th>Expected Outcomes</th><th>Skills Needed</th></tr>
       </thead>
       <tbody>
-        {% for moa in moas %}
+        {% for program in programs %}
         <tr>
-          <td>{{ moa.date_issued }}</td>
-          <td>{{ moa.termination_date }}</td>
-          <td>{{ moa.programs_included|default:"—" }}</td>
-          <td>{{ moa.with_amendment|yesno:"Yes,No" }}</td>
+          <td>{{ program.name }}</td>
+          <td>{{ program.description|default:"-" }}</td>
+          <td>{{ program.objectives|default:"-" }}</td>
+          <td>{{ program.expected_outcomes|default:"-" }}</td>
+          <td>{{ program.skills_needed|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-muted">No programs recorded.</p>{% endif %}
+  </div>
+</div>
+
+<div id="socioeconomic" class="tab-pane">
+  <div class="detail-section">
+    <h3>Socioeconomic Profile</h3>
+    {% if socioeconomic_profiles %}
+      {% for profile in socioeconomic_profiles %}
+      <dl>
+        <dt>Population Size</dt><dd>{{ profile.population_size }}</dd>
+        <dt>Population Breakdown</dt><dd>{{ profile.population_breakdown|default:"-" }}</dd>
+        <dt>Livelihoods</dt><dd>{{ profile.livelihoods|default:"-" }}</dd>
+        <dt>Health Profile</dt><dd>{{ profile.health_profile|default:"-" }}</dd>
+        <dt>Sociocultural Profile</dt><dd>{{ profile.sociocultural_profile|default:"-" }}</dd>
+        <dt>Political Profile</dt><dd>{{ profile.political_profile|default:"-" }}</dd>
+        <dt>Partner Networks</dt><dd>{{ profile.partner_networks|default:"-" }}</dd>
+        <dt>Resources Available</dt><dd>{{ profile.resources_available|default:"-" }}</dd>
+        <dt>Vulnerabilities</dt><dd>{{ profile.vulnerabilities|default:"-" }}</dd>
+        <dt>Housing</dt><dd>{{ profile.housing|default:"-" }}</dd>
+        <dt>Transportation</dt><dd>{{ profile.transportation|default:"-" }}</dd>
+        <dt>Electricity</dt><dd>{{ profile.electricity|default:"-" }}</dd>
+        <dt>Water</dt><dd>{{ profile.water|default:"-" }}</dd>
+        <dt>Wet Market</dt><dd>{{ profile.wet_market|default:"-" }}</dd>
+        <dt>Health Facilities</dt><dd>{{ profile.health_facilities|default:"-" }}</dd>
+        <dt>Education Facility</dt><dd>{{ profile.education_facility|default:"-" }}</dd>
+        <dt>Telecommunication</dt><dd>{{ profile.telecommunication|default:"-" }}</dd>
+        <dt>Others</dt><dd>{{ profile.others|default:"-" }}</dd>
+      </dl>
+      {% endfor %}
+    {% else %}<p class="text-muted">No socioeconomic profile recorded.</p>{% endif %}
+  </div>
+</div>
+
+<div id="interventions" class="tab-pane">
+  <div class="detail-section">
+    <h3>Past Interventions</h3>
+    {% if past_interventions %}
+    <table class="table table-sm">
+      <thead>
+        <tr><th>Name</th><th>Dates</th><th>Formator</th><th>Outcomes</th><th>Links</th></tr>
+      </thead>
+      <tbody>
+        {% for intervention in past_interventions %}
+        <tr>
           <td>
-            {% if moa.scanned_moa %}
-              <a href="{{ moa.scanned_moa }}" target="_blank" rel="noopener">View</a>
-            {% else %}
-              —
-            {% endif %}
+            <div>{{ intervention.name }}</div>
+            {% if intervention.description %}<div class="text-muted">{{ intervention.description }}</div>{% endif %}
+          </td>
+          <td>{{ intervention.date_started }}{% if intervention.date_ended %} to {{ intervention.date_ended }}{% endif %}</td>
+          <td>{{ intervention.formator|default:"-" }}</td>
+          <td>{{ intervention.outcomes|default:"-" }}</td>
+          <td>
+            {% if intervention.output_link %}<a href="{{ intervention.output_link }}" target="_blank" rel="noopener">Output</a>{% endif %}
+            {% if intervention.pictures_link %} | <a href="{{ intervention.pictures_link }}" target="_blank" rel="noopener">Pictures</a>{% endif %}
+            {% if intervention.evaluation_link %} | <a href="{{ intervention.evaluation_link }}" target="_blank" rel="noopener">Evaluation</a>{% endif %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-      <p class="text-muted">No MOA records.</p>
-    {% endif %}
+    {% else %}<p class="text-muted">No past interventions recorded.</p>{% endif %}
   </div>
 </div>
+
+<script>
+function switchTab(evt, tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    evt.currentTarget.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+</script>
+{% endblock %}
