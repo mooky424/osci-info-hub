@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ partner.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ title }}</h1>
+  <a class="btn btn-secondary" href="{% url 'partner-detail' partner.pk %}">Back to Partner</a>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="form-box detail-section">
+    <span class="form-box-label">{{ section_label }}</span>
+    <div class="form-row" style="grid-template-columns: 1fr;">
+      {% for field in form %}
+        <div class="form-group {% if field.errors %}has-error{% endif %}" style="margin-bottom: 1rem;">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+  </div>
+</form>
+{% endblock %}

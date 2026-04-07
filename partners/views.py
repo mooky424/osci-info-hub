@@ -10,11 +10,13 @@ from .forms import (
     ContactFormSet,
     PartnerCreateStepOneForm,
     PartnerForm,
+    PastInterventionForm,
     PastInterventionFormSet,
+    ProgramForm,
     ProgramFormSet,
     SocioEconomicProfileFormSet,
 )
-from .models import Partner
+from .models import Partner, Programs, PastInterventions
 
 
 CREATE_STEP_SESSION_KEY = "partner_create_wizard"
@@ -400,41 +402,11 @@ def partner_update(request, pk):
 
     if request.method == "POST":
         form = PartnerForm(request.POST, instance=partner)
-        contact_formset = ContactFormSet(
-            request.POST,
-            instance=partner,
-            prefix="contact",
-        )
-        program_formset = ProgramFormSet(
-            request.POST,
-            instance=partner,
-            prefix="program",
-        )
-        socioeconomic_formset = SocioEconomicProfileFormSet(
-            request.POST,
-            instance=partner,
-            prefix="socioeconomic",
-        )
-        intervention_formset = PastInterventionFormSet(
-            request.POST,
-            instance=partner,
-            prefix="intervention",
-        )
 
-        if (
-            form.is_valid()
-            and contact_formset.is_valid()
-            and program_formset.is_valid()
-            and socioeconomic_formset.is_valid()
-            and intervention_formset.is_valid()
-        ):
+        if form.is_valid():
             partner_obj = form.save(commit=False)
             partner_obj.updated_by = request.user if request.user.is_authenticated else None
             partner_obj.save()
-            contact_formset.save()
-            program_formset.save()
-            socioeconomic_formset.save()
-            intervention_formset.save()
             return redirect("partner-detail", pk=partner.pk)
 
         return render(
@@ -442,22 +414,12 @@ def partner_update(request, pk):
             "partners/partner_form.html",
             {
                 "form": form,
-                "contact_formset": contact_formset,
-                "program_formset": program_formset,
-                "socioeconomic_formset": socioeconomic_formset,
-                "intervention_formset": intervention_formset,
                 "partner": partner,
                 "is_edit": True,
             },
         )
 
     form = PartnerForm(instance=partner)
-    contact_formset = ContactFormSet(instance=partner, prefix="contact")
-    program_formset = ProgramFormSet(instance=partner, prefix="program")
-    socioeconomic_formset = SocioEconomicProfileFormSet(
-        instance=partner, prefix="socioeconomic"
-    )
-    intervention_formset = PastInterventionFormSet(instance=partner, prefix="intervention")
 
     return render(
         request,
@@ -465,10 +427,6 @@ def partner_update(request, pk):
         {
             "form": form,
             "partner": partner,
-            "contact_formset": contact_formset,
-            "program_formset": program_formset,
-            "socioeconomic_formset": socioeconomic_formset,
-            "intervention_formset": intervention_formset,
             "is_edit": True,
         },
     )
@@ -480,3 +438,83 @@ def partner_delete(request, pk):
         partner.delete()
         return redirect("partner-list")
     return redirect("partner-detail", pk=pk)
+
+def program_create(request, partner_pk):
+    partner = get_object_or_404(Partner, pk=partner_pk)
+    if request.method == "POST":
+        form = ProgramForm(request.POST)
+        if form.is_valid():
+            program = form.save(commit=False)
+            program.community_partner = partner
+            program.save()
+            return redirect("partner-detail", pk=partner.pk)
+    else:
+        form = ProgramForm()
+    return render(
+        request,
+        "partners/generic_sub_form.html",
+        {"form": form, "partner": partner, "title": "Add Program", "section_label": "Program Details"}
+    )
+
+def program_update(request, pk):
+    program = get_object_or_404(Programs, pk=pk)
+    partner = program.community_partner
+    if request.method == "POST":
+        form = ProgramForm(request.POST, instance=program)
+        if form.is_valid():
+            form.save()
+            return redirect("partner-detail", pk=partner.pk)
+    else:
+        form = ProgramForm(instance=program)
+    return render(
+        request,
+        "partners/generic_sub_form.html",
+        {"form": form, "partner": partner, "title": "Edit Program", "section_label": "Program Details"}
+    )
+
+def program_delete(request, pk):
+    program = get_object_or_404(Programs, pk=pk)
+    partner_pk = program.community_partner.pk
+    if request.method == "POST":
+        program.delete()
+    return redirect("partner-detail", pk=partner_pk)
+
+def intervention_create(request, partner_pk):
+    partner = get_object_or_404(Partner, pk=partner_pk)
+    if request.method == "POST":
+        form = PastInterventionForm(request.POST)
+        if form.is_valid():
+            intervention = form.save(commit=False)
+            intervention.community_partner = partner
+            intervention.save()
+            return redirect("partner-detail", pk=partner.pk)
+    else:
+        form = PastInterventionForm()
+    return render(
+        request,
+        "partners/generic_sub_form.html",
+        {"form": form, "partner": partner, "title": "Add Past Intervention", "section_label": "Intervention Details"}
+    )
+
+def intervention_update(request, pk):
+    intervention = get_object_or_404(PastInterventions, pk=pk)
+    partner = intervention.community_partner
+    if request.method == "POST":
+        form = PastInterventionForm(request.POST, instance=intervention)
+        if form.is_valid():
+            form.save()
+            return redirect("partner-detail", pk=partner.pk)
+    else:
+        form = PastInterventionForm(instance=intervention)
+    return render(
+        request,
+        "partners/generic_sub_form.html",
+        {"form": form, "partner": partner, "title": "Edit Past Intervention", "section_label": "Intervention Details"}
+    )
+
+def intervention_delete(request, pk):
+    intervention = get_object_or_404(PastInterventions, pk=pk)
+    partner_pk = intervention.community_partner.pk
+    if request.method == "POST":
+        intervention.delete()
+    return redirect("partner-detail", pk=partner_pk)

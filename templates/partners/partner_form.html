@@ -83,7 +83,7 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   </div>
   {% endif %}
 
-  {% if is_edit or step == 1 %}
+  {% if not is_edit and step == 1 %}
   <div class="detail-section form-box">
     <span class="form-box-label">Contacts</span>
     {{ contact_formset.management_form }}
@@ -116,7 +116,7 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   </div>
   {% endif %}
 
-  {% if is_edit or step == 2 %}
+  {% if not is_edit and step == 2 %}
   <div class="detail-section form-box">
     <span class="form-box-label">Socioeconomic Profile</span>
     {{ socioeconomic_formset.management_form }}
@@ -135,8 +135,8 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   </div>
   {% endif %}
 
-  {% if is_edit or step == 3 %}
-  {% if is_edit or include_programs %}
+  {% if not is_edit and step == 3 %}
+  {% if include_programs %}
   <div class="detail-section form-box">
     <span class="form-box-label">Programs</span>
     {{ program_formset.management_form }}
@@ -159,8 +159,8 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   {% endif %}
   {% endif %}
 
-  {% if is_edit or step == 4 %}
-  {% if is_edit or include_past_interventions %}
+  {% if not is_edit and step == 4 %}
+  {% if include_past_interventions %}
   <div class="detail-section form-box">
     <span class="form-box-label">Past Interventions</span>
     {{ intervention_formset.management_form }}

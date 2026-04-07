@@ -116,11 +116,14 @@
 
 <div id="programs" class="tab-pane">
   <div class="detail-section">
-    <h3>Programs</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="margin-bottom: 0;">Programs</h3>
+      <a class="btn btn-primary btn-sm" href="{% url 'program-create' partner.pk %}">Add Program</a>
+    </div>
     {% if programs %}
     <table class="table table-sm">
       <thead>
-        <tr><th>Name</th><th>Description</th><th>Objectives</th><th>Expected Outcomes</th><th>Skills Needed</th></tr>
+        <tr><th>Name</th><th>Description</th><th>Objectives</th><th>Expected Outcomes</th><th>Skills Needed</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for program in programs %}
@@ -130,6 +133,17 @@
           <td>{{ program.objectives|default:"-" }}</td>
           <td>{{ program.expected_outcomes|default:"-" }}</td>
           <td>{{ program.skills_needed|default:"-" }}</td>
+          <td>
+            <a class="btn-icon btn-edit" href="{% url 'program-update' program.pk %}">
+              <i data-lucide="edit" size="14"></i>
+            </a>
+            <form method="post" action="{% url 'program-delete' program.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to delete this program?');">
+              <i data-lucide="trash" size="14"></i>
+              </button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -170,11 +184,14 @@
 
 <div id="interventions" class="tab-pane">
   <div class="detail-section">
-    <h3>Past Interventions</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="margin-bottom: 0;">Past Interventions</h3>
+      <a class="btn btn-primary btn-sm" href="{% url 'intervention-create' partner.pk %}">Add Intervention</a>
+    </div>
     {% if past_interventions %}
     <table class="table table-sm">
       <thead>
-        <tr><th>Name</th><th>Dates</th><th>Formator</th><th>Outcomes</th><th>Links</th></tr>
+        <tr><th>Name</th><th>Dates</th><th>Formator</th><th>Outcomes</th><th>Links</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for intervention in past_interventions %}
@@ -190,6 +207,17 @@
             {% if intervention.output_link %}<a href="{{ intervention.output_link }}" target="_blank" rel="noopener">Output</a>{% endif %}
             {% if intervention.pictures_link %} | <a href="{{ intervention.pictures_link }}" target="_blank" rel="noopener">Pictures</a>{% endif %}
             {% if intervention.evaluation_link %} | <a href="{{ intervention.evaluation_link }}" target="_blank" rel="noopener">Evaluation</a>{% endif %}
+          </td>
+          <td>
+            <a class="btn-icon btn-edit" href="{% url 'intervention-update' intervention.pk %}">
+              <i data-lucide="edit" size="14"></i>
+            </a>
+            <form method="post" action="{% url 'intervention-delete' intervention.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to delete this intervention?');">
+              <i data-lucide="trash" size="14"></i>
+              </button>
+            </form>
           </td>
         </tr>
         {% endfor %}

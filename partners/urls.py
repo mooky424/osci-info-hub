@@ -8,4 +8,15 @@ urlpatterns = [
     path("<int:pk>/", views.partner_detail, name="partner-detail"),
     path("<int:pk>/update/", views.partner_update, name="partner-update"),
     path("<int:pk>/delete/", views.partner_delete, name="partner-delete"),
+
+    # Programs
+    path("<int:partner_pk>/programs/add/", views.program_create, name="program-create"),
+    path("programs/<int:pk>/update/", views.program_update, name="program-update"),
+    path("programs/<int:pk>/delete/", views.program_delete, name="program-delete"),
+
+    # Past Interventions
+    path("<int:partner_pk>/interventions/add/", views.intervention_create, name="intervention-create"),
+    path("interventions/<int:pk>/update/", views.intervention_update, name="intervention-update"),
+    path("interventions/<int:pk>/delete/", views.intervention_delete, name="intervention-delete"),
 ]
+
