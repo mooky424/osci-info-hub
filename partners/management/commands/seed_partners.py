@@ -3,7 +3,13 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from partners.models import Contact, Partner, PastInterventions, Programs, SocioEconomicProfile
+from partners.models import (
+    Contact,
+    Partner,
+    PastInterventions,
+    Programs,
+    SocioEconomicProfile,
+)
 from users.models import User
 
 
@@ -28,7 +34,9 @@ class Command(BaseCommand):
                 "first_name": "Seed",
                 "last_name": "Formator",
                 "email": "seed.formator@example.com",
-                "role": "Formator",
+                "role": User.Role.ADMINISTRATOR,
+                "name": "Seed Formator",
+                "position": "Program Formator",
             },
         )
 
@@ -57,7 +65,8 @@ class Command(BaseCommand):
                     "bir_registration": f"BIR-{idx:04d}",
                     "tin": f"{200000000 + idx}",
                     "moa_start_date": date.today() - timedelta(days=365 * (idx + 1)),
-                    "moa_end_date": date.today() + timedelta(days=365 * (3 - min(idx, 3))),
+                    "moa_end_date": date.today()
+                    + timedelta(days=365 * (3 - min(idx, 3))),
                     "moa_link": f"https://example.com/moa/seed-partner-{idx}",
                     "updated_by": formator,
                 },

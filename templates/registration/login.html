@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login — OSCI Partner Hub{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto;">
+  <div class="form-box detail-section">
+    <span class="form-box-label">Sign In</span>
+    
+    {% if form.errors %}
+    <div class="field-error" style="margin-bottom: 1rem; text-align: center;">
+      Invalid username or password. Please try again.
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+      </div>
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+      </div>
+      
+      <div class="form-actions" style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

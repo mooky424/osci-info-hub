@@ -32,27 +32,46 @@ class Partner(models.Model):
         related_name="updated_partners",
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["updated_at"]),
+            models.Index(fields=["date_established"]),
+            models.Index(fields=["moa_start_date"]),
+            models.Index(fields=["moa_end_date"]),
+            models.Index(fields=["updated_by"]),
+        ]
+
+
 class Contact(models.Model):
     id = models.AutoField(primary_key=True)
-    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='contacts')
+    community_partner = models.ForeignKey(
+        Partner, on_delete=models.CASCADE, related_name="contacts"
+    )
     name = models.CharField(max_length=255)
     position = models.CharField(max_length=255)
     designation = models.CharField(max_length=255)
     contact_number = models.CharField(max_length=11, validators=[contact_validator])
     email = models.EmailField(blank=True)
 
+
 class Programs(models.Model):
     id = models.AutoField(primary_key=True)
-    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='programs')
+    community_partner = models.ForeignKey(
+        Partner, on_delete=models.CASCADE, related_name="programs"
+    )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     objectives = models.TextField(blank=True)
     expected_outcomes = models.TextField(blank=True)
     skills_needed = models.TextField(blank=True)
 
+
 class SocioEconomicProfile(models.Model):
     id = models.AutoField(primary_key=True)
-    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='socioeconomic_profiles')
+    community_partner = models.ForeignKey(
+        Partner, on_delete=models.CASCADE, related_name="socioeconomic_profiles"
+    )
     population_size = models.IntegerField()
     population_breakdown = models.TextField(blank=True)
     livelihoods = models.TextField(blank=True)
@@ -72,13 +91,16 @@ class SocioEconomicProfile(models.Model):
     telecommunication = models.TextField(blank=True)
     others = models.TextField(blank=True)
 
+
 class PastInterventions(models.Model):
     id = models.AutoField(primary_key=True)
-    community_partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='past_interventions')
+    community_partner = models.ForeignKey(
+        Partner, on_delete=models.CASCADE, related_name="past_interventions"
+    )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     outcomes = models.TextField(blank=True)
-    formator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)    
+    formator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     date_started = models.DateField()
     date_ended = models.DateField(blank=True, null=True)
     output_link = models.URLField(blank=True)

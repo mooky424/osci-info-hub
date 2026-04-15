@@ -7,7 +7,13 @@
   <h1>{{ intervention.name }}</h1>
   <div class="header-actions">
     <a class="btn btn-secondary" href="{% url 'partner-detail' intervention.community_partner.pk %}">Back to Partner</a>
+    {% if user.is_authenticated %}
     <a class="btn btn-primary" href="{% url 'intervention-update' intervention.pk %}">Edit Intervention</a>
+    <form method="post" action="{% url 'intervention-delete' intervention.pk %}" style="display: inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this intervention?');">Delete Intervention</button>
+    </form>
+    {% endif %}
   </div>
 </div>
 

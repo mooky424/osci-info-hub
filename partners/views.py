@@ -1,10 +1,26 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.http import QueryDict
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from datetime import date, datetime
+from io import BytesIO
 
-from django.db import models, transaction
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db import connection, models, transaction
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, QueryDict
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    HRFlowable,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from .forms import (
     ContactFormSet,
@@ -16,8 +32,7 @@ from .forms import (
     ProgramFormSet,
     SocioEconomicProfileFormSet,
 )
-from .models import Partner, Programs, PastInterventions
-
+from .models import Partner, PastInterventions, Programs
 
 CREATE_STEP_SESSION_KEY = "partner_create_wizard"
 
@@ -25,7 +40,9 @@ CREATE_STEP_SESSION_KEY = "partner_create_wizard"
 def _build_step_one_initial_from_session(data):
     initial = data.get("partner", {}).copy()
     initial["include_programs"] = data.get("include_programs", False)
-    initial["include_past_interventions"] = data.get("include_past_interventions", False)
+    initial["include_past_interventions"] = data.get(
+        "include_past_interventions", False
+    )
     return initial
 
 
@@ -80,7 +97,153 @@ def partner_list(request):
         )
         .all()
     )
-    return render(request, "partners/partner_list.html", {"partners": partners})
+
+    q = request.GET.get("q", "").strip()
+    updated_by = request.GET.get("updated_by", "").strip()
+    has_moa_link = request.GET.get("has_moa_link", "").strip()
+
+    date_established_from = request.GET.get("date_established_from", "").strip()
+    date_established_to = request.GET.get("date_established_to", "").strip()
+    moa_start_from = request.GET.get("moa_start_from", "").strip()
+    moa_start_to = request.GET.get("moa_start_to", "").strip()
+    moa_end_from = request.GET.get("moa_end_from", "").strip()
+    moa_end_to = request.GET.get("moa_end_to", "").strip()
+    updated_from = request.GET.get("updated_from", "").strip()
+    updated_to = request.GET.get("updated_to", "").strip()
+    sort = request.GET.get("sort", "updated_desc").strip()
+
+    if q:
+        if connection.vendor == "postgresql":
+            from django.contrib.postgres.search import (
+                SearchQuery,
+                SearchRank,
+                SearchVector,
+            )
+
+            vector = SearchVector(
+                "name",
+                "vision",
+                "mission",
+                "goals",
+                "description",
+                "core_values",
+                "sec_registration",
+                "bir_registration",
+                "tin",
+            )
+            query = SearchQuery(q)
+            partners = (
+                partners.annotate(search=vector, rank=SearchRank(vector, query))
+                .filter(Q(search=query) | Q(name__icontains=q))
+                .order_by("-rank", "-updated_at")
+            )
+        else:
+            partners = partners.filter(
+                Q(name__icontains=q)
+                | Q(vision__icontains=q)
+                | Q(mission__icontains=q)
+                | Q(goals__icontains=q)
+                | Q(description__icontains=q)
+                | Q(core_values__icontains=q)
+                | Q(sec_registration__icontains=q)
+                | Q(bir_registration__icontains=q)
+                | Q(tin__icontains=q)
+            ).order_by("-updated_at")
+
+    if updated_by.isdigit():
+        partners = partners.filter(updated_by_id=int(updated_by))
+
+    if has_moa_link == "true":
+        partners = partners.exclude(moa_link="")
+    elif has_moa_link == "false":
+        partners = partners.filter(moa_link="")
+
+    if date_established_from:
+        partners = partners.filter(date_established__gte=date_established_from)
+    if date_established_to:
+        partners = partners.filter(date_established__lte=date_established_to)
+    if moa_start_from:
+        partners = partners.filter(moa_start_date__gte=moa_start_from)
+    if moa_start_to:
+        partners = partners.filter(moa_start_date__lte=moa_start_to)
+    if moa_end_from:
+        partners = partners.filter(moa_end_date__gte=moa_end_from)
+    if moa_end_to:
+        partners = partners.filter(moa_end_date__lte=moa_end_to)
+    if updated_from:
+        partners = partners.filter(updated_at__date__gte=updated_from)
+    if updated_to:
+        partners = partners.filter(updated_at__date__lte=updated_to)
+
+    if not q:
+        sort_map = {
+            "name_asc": ["name", "-updated_at"],
+            "name_desc": ["-name", "-updated_at"],
+            "updated_desc": ["-updated_at"],
+            "updated_asc": ["updated_at"],
+            "established_desc": ["-date_established"],
+            "established_asc": ["date_established"],
+        }
+        partners = partners.order_by(*sort_map.get(sort, sort_map["updated_desc"]))
+
+    paginator = Paginator(partners, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    filter_querydict = request.GET.copy()
+    filter_querydict.pop("page", None)
+
+    def _build_filter_url_without(*keys):
+        querydict = filter_querydict.copy()
+        for key in keys:
+            querydict.pop(key, None)
+        encoded = querydict.urlencode()
+        if encoded:
+            return f"{reverse('partner-list')}?{encoded}"
+        return reverse("partner-list")
+
+    users = (
+        Partner.objects.exclude(updated_by=None)
+        .values("updated_by_id", "updated_by__username")
+        .distinct()
+        .order_by("updated_by__username")
+    )
+
+    context = {
+        "partners": page_obj,
+        "page_obj": page_obj,
+        "updated_by_users": users,
+        "filters": {
+            "q": q,
+            "updated_by": updated_by,
+            "has_moa_link": has_moa_link,
+            "date_established_from": date_established_from,
+            "date_established_to": date_established_to,
+            "moa_start_from": moa_start_from,
+            "moa_start_to": moa_start_to,
+            "moa_end_from": moa_end_from,
+            "moa_end_to": moa_end_to,
+            "updated_from": updated_from,
+            "updated_to": updated_to,
+            "sort": sort,
+        },
+        "filter_query": filter_querydict.urlencode(),
+        "total_count": paginator.count,
+        "clear_filter_urls": {
+            "q": _build_filter_url_without("q"),
+            "updated_by": _build_filter_url_without("updated_by"),
+            "has_moa_link": _build_filter_url_without("has_moa_link"),
+            "date_established_from": _build_filter_url_without("date_established_from"),
+            "date_established_to": _build_filter_url_without("date_established_to"),
+            "moa_start_from": _build_filter_url_without("moa_start_from"),
+            "moa_start_to": _build_filter_url_without("moa_start_to"),
+            "moa_end_from": _build_filter_url_without("moa_end_from"),
+            "moa_end_to": _build_filter_url_without("moa_end_to"),
+            "updated_from": _build_filter_url_without("updated_from"),
+            "updated_to": _build_filter_url_without("updated_to"),
+            "sort": _build_filter_url_without("sort"),
+        },
+    }
+    return render(request, "partners/partner_list.html", context)
 
 
 def partner_detail(request, pk):
@@ -106,6 +269,311 @@ def partner_detail(request, pk):
     )
 
 
+@login_required
+def partner_export_pdf(request, pk):
+    partner = get_object_or_404(
+        Partner.objects.prefetch_related(
+            "contacts",
+            "programs",
+            "socioeconomic_profiles",
+            "past_interventions",
+        ),
+        pk=pk,
+    )
+
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=18 * mm,
+        leftMargin=18 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+        title=f"Partner Export - {partner.name}",
+    )
+
+    styles = getSampleStyleSheet()
+    cover_header_style = ParagraphStyle(
+        "CoverHeader",
+        parent=styles["Normal"],
+        fontName="Times-Roman",
+        fontSize=13,
+        alignment=1,
+        leading=16,
+    )
+    cover_title_style = ParagraphStyle(
+        "CoverTitle",
+        parent=styles["Title"],
+        fontName="Times-Bold",
+        fontSize=28,
+        alignment=1,
+        spaceAfter=20,
+    )
+    cover_partner_style = ParagraphStyle(
+        "CoverPartner",
+        parent=styles["Heading1"],
+        fontName="Times-Bold",
+        fontSize=24,
+        alignment=1,
+        leading=29,
+    )
+    cover_sub_style = ParagraphStyle(
+        "CoverSub",
+        parent=styles["Normal"],
+        fontName="Times-Bold",
+        fontSize=14,
+        alignment=1,
+        leading=18,
+    )
+    section_heading_style = ParagraphStyle(
+        "SectionHeading",
+        parent=styles["Heading1"],
+        fontName="Times-Bold",
+        fontSize=20,
+        spaceAfter=8,
+    )
+    table_label_style = ParagraphStyle(
+        "TableLabel",
+        parent=styles["Normal"],
+        fontName="Times-Bold",
+        fontSize=11,
+        leading=14,
+    )
+    table_value_style = ParagraphStyle(
+        "TableValue",
+        parent=styles["Normal"],
+        fontSize=10,
+        leading=13,
+    )
+
+    def _text(value):
+        if not value:
+            return "-"
+        return str(value).strip().replace("\n", "<br/>")
+
+    contacts = list(partner.contacts.all())
+    programs = list(partner.programs.all())
+    profiles = list(partner.socioeconomic_profiles.all())
+    interventions = list(partner.past_interventions.all())
+
+    head_contact = contacts[0] if contacts else None
+
+    programs_html = "<br/><br/>".join(
+        [
+            (
+                f"• <b>{_text(program.name)}</b>: {_text(program.description)}"
+                f"<br/>Objectives: {_text(program.objectives)}"
+                f"<br/>Expected Outcomes: {_text(program.expected_outcomes)}"
+            )
+            for program in programs
+        ]
+    )
+    if not programs_html:
+        programs_html = "-"
+
+    contacts_html = "<br/><br/>".join(
+        [
+            (
+                f"<b>{_text(contact.name)}</b><br/>"
+                f"{_text(contact.position)}"
+                f"{f' / {_text(contact.designation)}' if contact.designation else ''}<br/>"
+                f"{_text(contact.contact_number)}<br/>"
+                f"{_text(contact.email)}"
+            )
+            for contact in contacts
+        ]
+    )
+    if not contacts_html:
+        contacts_html = "-"
+
+    social_refs = []
+    if partner.moa_link:
+        social_refs.append(f"MOA Link: {_text(partner.moa_link)}")
+    for intervention in interventions:
+        if intervention.output_link:
+            social_refs.append(
+                f"Output ({_text(intervention.name)}): {_text(intervention.output_link)}"
+            )
+    social_refs_html = "<br/>".join(social_refs) if social_refs else "-"
+
+    description_rows = [
+        ["Vision", _text(partner.vision)],
+        ["Mission", _text(partner.mission)],
+        ["Goals and Objectives", _text(partner.goals)],
+        ["Programs and Services Offered", programs_html],
+        ["Core Values", _text(partner.core_values)],
+        [
+            "Head Of Organization and Designation<br/><i>(For MOA Purposes)</i>",
+            (
+                f"<b>{_text(head_contact.name if head_contact else '-')}</b><br/>"
+                f"{_text(head_contact.position if head_contact else '-')}<br/>"
+                f"{_text(head_contact.email if head_contact else '-')}"
+            ),
+        ],
+        ["Area Coordinators and Contact Details", contacts_html],
+        ["Short Description and Background of CPO", _text(partner.description)],
+        ["Social Media Platforms/References", social_refs_html],
+        [
+            "Date Established<br/>SEC Registration<br/><br/>BIR Certificate of Registration<br/>TIN",
+            (
+                f"{_text(partner.date_established)}<br/>{_text(partner.sec_registration)}"
+                f"<br/><br/>{_text(partner.bir_registration)}<br/>{_text(partner.tin)}"
+            ),
+        ],
+    ]
+
+    table_rows = [
+        [Paragraph(label, table_label_style), Paragraph(value, table_value_style)]
+        for label, value in description_rows
+    ]
+
+    story = []
+    story.append(Spacer(1, 28 * mm))
+    story.append(
+        Paragraph("OFFICE FOR SOCIAL CONCERN AND INVOLVEMENT", cover_header_style)
+    )
+    story.append(Paragraph("ATENEO DE MANILA UNIVERSITY", cover_header_style))
+    story.append(Spacer(1, 3 * mm))
+    story.append(
+        HRFlowable(width="72%", thickness=1, color=colors.black, spaceAfter=22)
+    )
+    story.append(Paragraph("Community Partner Organization Profile", cover_title_style))
+    story.append(Spacer(1, 50 * mm))
+    story.append(Paragraph(partner.name.upper(), cover_partner_style))
+    if head_contact and head_contact.position:
+        story.append(Spacer(1, 3 * mm))
+        story.append(Paragraph(_text(head_contact.position), cover_sub_style))
+    story.append(PageBreak())
+
+    story.append(Paragraph("PART 1: DESCRIPTION OF THE CPO", section_heading_style))
+    description_table = Table(table_rows, colWidths=[62 * mm, 118 * mm])
+    description_table.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 1.2, colors.black),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(description_table)
+
+    if profiles or interventions:
+        story.append(PageBreak())
+        story.append(
+            Paragraph(
+                "PART 2: SOCIOECONOMIC PROFILE AND INTERVENTIONS", section_heading_style
+            )
+        )
+
+    if profiles:
+        profile_rows = []
+        for profile in profiles:
+            profile_rows.extend(
+                [
+                    ["Population Size", _text(profile.population_size)],
+                    ["Population Breakdown", _text(profile.population_breakdown)],
+                    ["Livelihoods", _text(profile.livelihoods)],
+                    ["Health Profile", _text(profile.health_profile)],
+                    ["Sociocultural Profile", _text(profile.sociocultural_profile)],
+                    ["Political Profile", _text(profile.political_profile)],
+                    ["Partner Networks", _text(profile.partner_networks)],
+                    ["Resources Available", _text(profile.resources_available)],
+                    ["Vulnerabilities", _text(profile.vulnerabilities)],
+                    ["Housing", _text(profile.housing)],
+                    ["Transportation", _text(profile.transportation)],
+                    ["Electricity", _text(profile.electricity)],
+                    ["Water", _text(profile.water)],
+                    ["Wet Market", _text(profile.wet_market)],
+                    ["Health Facilities", _text(profile.health_facilities)],
+                    ["Education Facility", _text(profile.education_facility)],
+                    ["Telecommunication", _text(profile.telecommunication)],
+                    ["Others", _text(profile.others)],
+                ]
+            )
+
+        profile_table = Table(
+            [
+                [Paragraph(l, table_label_style), Paragraph(v, table_value_style)]
+                for l, v in profile_rows
+            ],
+            colWidths=[62 * mm, 118 * mm],
+        )
+        profile_table.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 1.0, colors.black),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ]
+            )
+        )
+        story.append(profile_table)
+        story.append(Spacer(1, 8))
+
+    if interventions:
+        intervention_rows = [["Name", "Dates", "Formator", "Outcomes", "Links"]]
+        for intervention in interventions:
+            date_range = _text(intervention.date_started)
+            if intervention.date_ended:
+                date_range = f"{date_range} to {intervention.date_ended}"
+            links = [
+                link
+                for link in [
+                    intervention.output_link,
+                    intervention.pictures_link,
+                    intervention.evaluation_link,
+                ]
+                if link
+            ]
+            intervention_rows.append(
+                [
+                    _text(intervention.name),
+                    _text(date_range),
+                    _text(intervention.formator),
+                    _text(intervention.outcomes),
+                    _text(" | ".join(links) if links else "-"),
+                ]
+            )
+        intervention_table = Table(
+            intervention_rows,
+            colWidths=[32 * mm, 30 * mm, 30 * mm, 46 * mm, 42 * mm],
+            repeatRows=1,
+        )
+        intervention_table.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 1.0, colors.black),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f2f2f2")),
+                    ("FONTNAME", (0, 0), (-1, 0), "Times-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ]
+            )
+        )
+        story.append(intervention_table)
+
+    document.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    filename = f"partner_{partner.pk}_details.pdf"
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
 def partner_create(request):
     step = request.GET.get("step", "1")
     if request.GET.get("reset") == "1":
@@ -277,7 +745,9 @@ def partner_create(request):
                 for intervention_data in intervention_cleaned:
                     intervention_data.pop("id", None)
                     if intervention_data.get("formator") is not None:
-                        intervention_data["formator_id"] = intervention_data.pop("formator")
+                        intervention_data["formator_id"] = intervention_data.pop(
+                            "formator"
+                        )
                     partner.past_interventions.create(**intervention_data)
 
             _clear_create_wizard(request)
@@ -290,8 +760,12 @@ def partner_create(request):
             form = PartnerCreateStepOneForm(draft_data)
             contact_formset = ContactFormSet(draft_data, prefix="contact")
         else:
-            form = PartnerCreateStepOneForm(initial=_build_step_one_initial_from_session(wizard_data))
-            contact_initial = wizard_data.get("contacts") if wizard_data.get("contacts") else None
+            form = PartnerCreateStepOneForm(
+                initial=_build_step_one_initial_from_session(wizard_data)
+            )
+            contact_initial = (
+                wizard_data.get("contacts") if wizard_data.get("contacts") else None
+            )
             contact_formset = ContactFormSet(prefix="contact", initial=contact_initial)
         return render(
             request,
@@ -345,7 +819,9 @@ def partner_create(request):
                 _deserialize_post_data(step_three_draft), prefix="program"
             )
         else:
-            program_initial = wizard_data.get("programs") if wizard_data.get("programs") else None
+            program_initial = (
+                wizard_data.get("programs") if wizard_data.get("programs") else None
+            )
             program_formset = ProgramFormSet(prefix="program", initial=program_initial)
         return render(
             request,
@@ -397,6 +873,7 @@ def partner_create(request):
     return _redirect_create(step=1)
 
 
+@login_required
 def partner_update(request, pk):
     partner = get_object_or_404(Partner, pk=pk)
 
@@ -405,7 +882,9 @@ def partner_update(request, pk):
 
         if form.is_valid():
             partner_obj = form.save(commit=False)
-            partner_obj.updated_by = request.user if request.user.is_authenticated else None
+            partner_obj.updated_by = (
+                request.user if request.user.is_authenticated else None
+            )
             partner_obj.save()
             return redirect("partner-detail", pk=partner.pk)
 
@@ -432,6 +911,7 @@ def partner_update(request, pk):
     )
 
 
+@login_required
 def partner_delete(request, pk):
     partner = get_object_or_404(Partner, pk=pk)
     if request.method == "POST":
@@ -439,6 +919,8 @@ def partner_delete(request, pk):
         return redirect("partner-list")
     return redirect("partner-detail", pk=pk)
 
+
+@login_required
 def program_create(request, partner_pk):
     partner = get_object_or_404(Partner, pk=partner_pk)
     if request.method == "POST":
@@ -453,13 +935,25 @@ def program_create(request, partner_pk):
     return render(
         request,
         "partners/generic_sub_form.html",
-        {"form": form, "partner": partner, "title": "Add Program", "section_label": "Program Details"}
+        {
+            "form": form,
+            "partner": partner,
+            "title": "Add Program",
+            "section_label": "Program Details",
+        },
     )
+
 
 def program_detail(request, pk):
     program = get_object_or_404(Programs, pk=pk)
-    return render(request, "partners/program_detail.html", {"program": program, "partner": program.community_partner})
+    return render(
+        request,
+        "partners/program_detail.html",
+        {"program": program, "partner": program.community_partner},
+    )
 
+
+@login_required
 def program_update(request, pk):
     program = get_object_or_404(Programs, pk=pk)
     partner = program.community_partner
@@ -473,9 +967,16 @@ def program_update(request, pk):
     return render(
         request,
         "partners/generic_sub_form.html",
-        {"form": form, "partner": partner, "title": "Edit Program", "section_label": "Program Details"}
+        {
+            "form": form,
+            "partner": partner,
+            "title": "Edit Program",
+            "section_label": "Program Details",
+        },
     )
 
+
+@login_required
 def program_delete(request, pk):
     program = get_object_or_404(Programs, pk=pk)
     partner_pk = program.community_partner.pk
@@ -483,6 +984,8 @@ def program_delete(request, pk):
         program.delete()
     return redirect("partner-detail", pk=partner_pk)
 
+
+@login_required
 def intervention_create(request, partner_pk):
     partner = get_object_or_404(Partner, pk=partner_pk)
     if request.method == "POST":
@@ -497,13 +1000,25 @@ def intervention_create(request, partner_pk):
     return render(
         request,
         "partners/generic_sub_form.html",
-        {"form": form, "partner": partner, "title": "Add Past Intervention", "section_label": "Intervention Details"}
+        {
+            "form": form,
+            "partner": partner,
+            "title": "Add Past Intervention",
+            "section_label": "Intervention Details",
+        },
     )
+
 
 def intervention_detail(request, pk):
     intervention = get_object_or_404(PastInterventions, pk=pk)
-    return render(request, "partners/intervention_detail.html", {"intervention": intervention, "partner": intervention.community_partner})
+    return render(
+        request,
+        "partners/intervention_detail.html",
+        {"intervention": intervention, "partner": intervention.community_partner},
+    )
 
+
+@login_required
 def intervention_update(request, pk):
     intervention = get_object_or_404(PastInterventions, pk=pk)
     partner = intervention.community_partner
@@ -517,9 +1032,16 @@ def intervention_update(request, pk):
     return render(
         request,
         "partners/generic_sub_form.html",
-        {"form": form, "partner": partner, "title": "Edit Past Intervention", "section_label": "Intervention Details"}
+        {
+            "form": form,
+            "partner": partner,
+            "title": "Edit Past Intervention",
+            "section_label": "Intervention Details",
+        },
     )
 
+
+@login_required
 def intervention_delete(request, pk):
     intervention = get_object_or_404(PastInterventions, pk=pk)
     partner_pk = intervention.community_partner.pk
