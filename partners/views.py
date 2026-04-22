@@ -12,34 +12,27 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
-from reportlab.platypus import (
-    HRFlowable,
-    PageBreak,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import (HRFlowable, PageBreak, Paragraph,
+                                SimpleDocTemplate, Spacer, Table, TableStyle)
 
 from .forms import (
     ContactFormSet,
+    NeedForm,
+    NeedFormSet,
     PartnerCreateStepOneForm,
     PartnerForm,
     PastInterventionForm,
     PastInterventionFormSet,
-    ProgramForm,
-    ProgramFormSet,
     SocioEconomicProfileFormSet,
 )
-from .models import Partner, PastInterventions, Programs
+from .models import Needs, Partner, PastInterventions
 
 CREATE_STEP_SESSION_KEY = "partner_create_wizard"
 
 
 def _build_step_one_initial_from_session(data):
     initial = data.get("partner", {}).copy()
-    initial["include_programs"] = data.get("include_programs", False)
+    initial["include_needs"] = data.get("include_needs", False)
     initial["include_past_interventions"] = data.get(
         "include_past_interventions", False
     )
@@ -91,10 +84,11 @@ def partner_list(request):
         Partner.objects.select_related("updated_by")
         .prefetch_related(
             "contacts",
-            "programs",
+            "needs",
             "past_interventions",
             "socioeconomic_profiles",
         )
+        .filter(is_archived=False)
         .all()
     )
 
@@ -114,11 +108,9 @@ def partner_list(request):
 
     if q:
         if connection.vendor == "postgresql":
-            from django.contrib.postgres.search import (
-                SearchQuery,
-                SearchRank,
-                SearchVector,
-            )
+            from django.contrib.postgres.search import (SearchQuery,
+                                                        SearchRank,
+                                                        SearchVector)
 
             vector = SearchVector(
                 "name",
@@ -250,11 +242,12 @@ def partner_detail(request, pk):
     partner = get_object_or_404(
         Partner.objects.prefetch_related(
             "contacts",
-            "programs",
+            "needs",
             "socioeconomic_profiles",
             "past_interventions",
         ),
         pk=pk,
+        is_archived=False,
     )
     return render(
         request,
@@ -262,9 +255,9 @@ def partner_detail(request, pk):
         {
             "partner": partner,
             "contacts": partner.contacts.all(),
-            "programs": partner.programs.all(),
+            "needs": partner.needs.filter(is_archived=False),
             "socioeconomic_profiles": partner.socioeconomic_profiles.all(),
-            "past_interventions": partner.past_interventions.all(),
+            "past_interventions": partner.past_interventions.filter(is_archived=False),
         },
     )
 
@@ -274,11 +267,12 @@ def partner_export_pdf(request, pk):
     partner = get_object_or_404(
         Partner.objects.prefetch_related(
             "contacts",
-            "programs",
+            "needs",
             "socioeconomic_profiles",
             "past_interventions",
         ),
         pk=pk,
+        is_archived=False,
     )
 
     buffer = BytesIO()
@@ -352,31 +346,30 @@ def partner_export_pdf(request, pk):
         return str(value).strip().replace("\n", "<br/>")
 
     contacts = list(partner.contacts.all())
-    programs = list(partner.programs.all())
+    needs = list(partner.needs.filter(is_archived=False))
     profiles = list(partner.socioeconomic_profiles.all())
-    interventions = list(partner.past_interventions.all())
+    interventions = list(partner.past_interventions.filter(is_archived=False))
 
     head_contact = contacts[0] if contacts else None
 
-    programs_html = "<br/><br/>".join(
+    needs_html = "<br/><br/>".join(
         [
             (
-                f"• <b>{_text(program.name)}</b>: {_text(program.description)}"
-                f"<br/>Objectives: {_text(program.objectives)}"
-                f"<br/>Expected Outcomes: {_text(program.expected_outcomes)}"
+                f"• <b>{_text(need.name)}</b>: {_text(need.description)}"
+                f"<br/>Objectives: {_text(need.objectives)}"
+                f"<br/>Expected Outcomes: {_text(need.expected_outcomes)}"
             )
-            for program in programs
+            for need in needs
         ]
     )
-    if not programs_html:
-        programs_html = "-"
+    if not needs_html:
+        needs_html = "-"
 
     contacts_html = "<br/><br/>".join(
         [
             (
                 f"<b>{_text(contact.name)}</b><br/>"
                 f"{_text(contact.position)}"
-                f"{f' / {_text(contact.designation)}' if contact.designation else ''}<br/>"
                 f"{_text(contact.contact_number)}<br/>"
                 f"{_text(contact.email)}"
             )
@@ -400,7 +393,7 @@ def partner_export_pdf(request, pk):
         ["Vision", _text(partner.vision)],
         ["Mission", _text(partner.mission)],
         ["Goals and Objectives", _text(partner.goals)],
-        ["Programs and Services Offered", programs_html],
+        ["Needs Repository and Services Offered", needs_html],
         ["Core Values", _text(partner.core_values)],
         [
             "Head Of Organization and Designation<br/><i>(For MOA Purposes)</i>",
@@ -603,8 +596,8 @@ def partner_create(request):
                     for k, v in form.cleaned_data.items()
                     if k in form.Meta.fields
                 }
-                wizard_data["include_programs"] = form.cleaned_data.get(
-                    "include_programs", False
+                wizard_data["include_needs"] = form.cleaned_data.get(
+                    "include_needs", False
                 )
                 wizard_data["include_past_interventions"] = form.cleaned_data.get(
                     "include_past_interventions", False
@@ -652,7 +645,7 @@ def partner_create(request):
                     "step": 2,
                     "step_title": "Socioeconomic Profile",
                     "socioeconomic_formset": socioeconomic_formset,
-                    "include_programs": wizard_data.get("include_programs", False),
+                    "include_needs": wizard_data.get("include_needs", False),
                     "include_past_interventions": wizard_data.get(
                         "include_past_interventions", False
                     ),
@@ -660,14 +653,14 @@ def partner_create(request):
             )
 
         if step == "3":
-            if not wizard_data.get("include_programs", False):
+            if not wizard_data.get("include_needs", False):
                 return _redirect_create(step=4)
 
-            program_formset = ProgramFormSet(request.POST, prefix="program")
-            if program_formset.is_valid():
-                wizard_data["programs"] = [
+            need_formset = NeedFormSet(request.POST, prefix="need")
+            if need_formset.is_valid():
+                wizard_data["needs"] = [
                     _make_session_safe(pf.cleaned_data)
-                    for pf in program_formset.forms
+                    for pf in need_formset.forms
                     if pf.cleaned_data
                 ]
                 wizard_data.pop("draft_step_3", None)
@@ -680,9 +673,9 @@ def partner_create(request):
                 "partners/partner_form.html",
                 {
                     "step": 3,
-                    "step_title": "Programs",
-                    "program_formset": program_formset,
-                    "include_programs": True,
+                    "step_title": "Needs Repository",
+                    "need_formset": need_formset,
+                    "include_needs": True,
                     "include_past_interventions": wizard_data.get(
                         "include_past_interventions", False
                     ),
@@ -705,9 +698,7 @@ def partner_create(request):
                             "step": 4,
                             "step_title": "Past Interventions",
                             "intervention_formset": intervention_formset,
-                            "include_programs": wizard_data.get(
-                                "include_programs", False
-                            ),
+                            "include_needs": wizard_data.get("include_needs", False),
                             "include_past_interventions": True,
                         },
                     )
@@ -738,9 +729,9 @@ def partner_create(request):
                     profile_data.pop("id", None)
                     partner.socioeconomic_profiles.create(**profile_data)
 
-                for program_data in wizard_data.get("programs", []):
-                    program_data.pop("id", None)
-                    partner.programs.create(**program_data)
+                for need_data in wizard_data.get("needs", []):
+                    need_data.pop("id", None)
+                    partner.needs.create(**need_data)
 
                 for intervention_data in intervention_cleaned:
                     intervention_data.pop("id", None)
@@ -803,7 +794,7 @@ def partner_create(request):
                 "step": 2,
                 "step_title": "Socioeconomic Profile",
                 "socioeconomic_formset": socioeconomic_formset,
-                "include_programs": wizard_data.get("include_programs", False),
+                "include_needs": wizard_data.get("include_needs", False),
                 "include_past_interventions": wizard_data.get(
                     "include_past_interventions", False
                 ),
@@ -811,26 +802,26 @@ def partner_create(request):
         )
 
     if step == "3":
-        if not wizard_data.get("include_programs", False):
+        if not wizard_data.get("include_needs", False):
             return _redirect_create(step=4)
         step_three_draft = wizard_data.get("draft_step_3")
         if step_three_draft:
-            program_formset = ProgramFormSet(
-                _deserialize_post_data(step_three_draft), prefix="program"
+            need_formset = NeedFormSet(
+                _deserialize_post_data(step_three_draft), prefix="need"
             )
         else:
-            program_initial = (
-                wizard_data.get("programs") if wizard_data.get("programs") else None
+            need_initial = (
+                wizard_data.get("needs") if wizard_data.get("needs") else None
             )
-            program_formset = ProgramFormSet(prefix="program", initial=program_initial)
+            need_formset = NeedFormSet(prefix="need", initial=need_initial)
         return render(
             request,
             "partners/partner_form.html",
             {
                 "step": 3,
-                "step_title": "Programs",
-                "program_formset": program_formset,
-                "include_programs": True,
+                "step_title": "Needs Repository",
+                "need_formset": need_formset,
+                "include_needs": True,
                 "include_past_interventions": wizard_data.get(
                     "include_past_interventions", False
                 ),
@@ -863,7 +854,7 @@ def partner_create(request):
                 "step": 4,
                 "step_title": "Past Interventions",
                 "intervention_formset": intervention_formset,
-                "include_programs": wizard_data.get("include_programs", False),
+                "include_needs": wizard_data.get("include_needs", False),
                 "include_past_interventions": wizard_data.get(
                     "include_past_interventions", False
                 ),
@@ -875,7 +866,7 @@ def partner_create(request):
 
 @login_required
 def partner_update(request, pk):
-    partner = get_object_or_404(Partner, pk=pk)
+    partner = get_object_or_404(Partner, pk=pk, is_archived=False)
 
     if request.method == "POST":
         form = PartnerForm(request.POST, instance=partner)
@@ -913,81 +904,83 @@ def partner_update(request, pk):
 
 @login_required
 def partner_delete(request, pk):
-    partner = get_object_or_404(Partner, pk=pk)
+    partner = get_object_or_404(Partner, pk=pk, is_archived=False)
     if request.method == "POST":
-        partner.delete()
+        partner.is_archived = True
+        partner.save(update_fields=["is_archived"])
         return redirect("partner-list")
     return redirect("partner-detail", pk=pk)
 
 
 @login_required
-def program_create(request, partner_pk):
-    partner = get_object_or_404(Partner, pk=partner_pk)
+def need_create(request, partner_pk):
+    partner = get_object_or_404(Partner, pk=partner_pk, is_archived=False)
     if request.method == "POST":
-        form = ProgramForm(request.POST)
+        form = NeedForm(request.POST)
         if form.is_valid():
-            program = form.save(commit=False)
-            program.community_partner = partner
-            program.save()
+            need = form.save(commit=False)
+            need.community_partner = partner
+            need.save()
             return redirect("partner-detail", pk=partner.pk)
     else:
-        form = ProgramForm()
+        form = NeedForm()
     return render(
         request,
         "partners/generic_sub_form.html",
         {
             "form": form,
             "partner": partner,
-            "title": "Add Program",
-            "section_label": "Program Details",
+            "title": "Add Need",
+            "section_label": "Need Details",
         },
     )
 
 
-def program_detail(request, pk):
-    program = get_object_or_404(Programs, pk=pk)
+def need_detail(request, pk):
+    need = get_object_or_404(Needs, pk=pk, is_archived=False)
     return render(
         request,
-        "partners/program_detail.html",
-        {"program": program, "partner": program.community_partner},
+        "partners/need_detail.html",
+        {"need": need, "partner": need.community_partner},
     )
 
 
 @login_required
-def program_update(request, pk):
-    program = get_object_or_404(Programs, pk=pk)
-    partner = program.community_partner
+def need_update(request, pk):
+    need = get_object_or_404(Needs, pk=pk, is_archived=False)
+    partner = need.community_partner
     if request.method == "POST":
-        form = ProgramForm(request.POST, instance=program)
+        form = NeedForm(request.POST, instance=need)
         if form.is_valid():
             form.save()
             return redirect("partner-detail", pk=partner.pk)
     else:
-        form = ProgramForm(instance=program)
+        form = NeedForm(instance=need)
     return render(
         request,
         "partners/generic_sub_form.html",
         {
             "form": form,
             "partner": partner,
-            "title": "Edit Program",
-            "section_label": "Program Details",
+            "title": "Edit Need",
+            "section_label": "Need Details",
         },
     )
 
 
 @login_required
-def program_delete(request, pk):
-    program = get_object_or_404(Programs, pk=pk)
-    partner_pk = program.community_partner.pk
+def need_delete(request, pk):
+    need = get_object_or_404(Needs, pk=pk, is_archived=False)
+    partner_pk = need.community_partner.pk
     if request.method == "POST":
-        program.delete()
+        need.is_archived = True
+        need.save(update_fields=["is_archived"])
     return redirect("partner-detail", pk=partner_pk)
 
 
 @login_required
 def intervention_create(request, partner_pk):
-    partner = get_object_or_404(Partner, pk=partner_pk)
+    partner = get_object_or_404(Partner, pk=partner_pk, is_archived=False)
     if request.method == "POST":
         form = PastInterventionForm(request.POST)
         if form.is_valid():
@@ -1010,7 +1003,7 @@ def intervention_create(request, partner_pk):
 
 
 def intervention_detail(request, pk):
-    intervention = get_object_or_404(PastInterventions, pk=pk)
+    intervention = get_object_or_404(PastInterventions, pk=pk, is_archived=False)
     return render(
         request,
         "partners/intervention_detail.html",
@@ -1020,7 +1013,7 @@ def intervention_detail(request, pk):
 
 @login_required
 def intervention_update(request, pk):
-    intervention = get_object_or_404(PastInterventions, pk=pk)
+    intervention = get_object_or_404(PastInterventions, pk=pk, is_archived=False)
     partner = intervention.community_partner
     if request.method == "POST":
         form = PastInterventionForm(request.POST, instance=intervention)
@@ -1043,8 +1036,9 @@ def intervention_update(request, pk):
 
 @login_required
 def intervention_delete(request, pk):
-    intervention = get_object_or_404(PastInterventions, pk=pk)
+    intervention = get_object_or_404(PastInterventions, pk=pk, is_archived=False)
     partner_pk = intervention.community_partner.pk
     if request.method == "POST":
-        intervention.delete()
+        intervention.is_archived = True
+        intervention.save(update_fields=["is_archived"])
     return redirect("partner-detail", pk=partner_pk)

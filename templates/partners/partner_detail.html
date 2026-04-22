@@ -12,7 +12,7 @@
     <a class="btn btn-primary" href="{% url 'partner-update' partner.pk %}">Edit Partner</a>
     <form method="post" action="{% url 'partner-delete' partner.pk %}" style="display: inline;">
       {% csrf_token %}
-      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this partner?');">Delete Partner</button>
+      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to archive this partner?');">Archive Partner</button>
     </form>
     {% endif %}
   </div>
@@ -20,7 +20,7 @@
 
 <div class="tabs-header">
   <button class="tab-btn active" onclick="switchTab(event, 'overview')">Overview</button>
-  <button class="tab-btn" onclick="switchTab(event, 'programs')">Programs ({{ programs|length }})</button>
+  <button class="tab-btn" onclick="switchTab(event, 'needs')">Needs Repository ({{ needs|length }})</button>
   <button class="tab-btn" onclick="switchTab(event, 'socioeconomic')">Socioeconomic Profile</button>
   <button class="tab-btn" onclick="switchTab(event, 'interventions')">Past Interventions ({{ past_interventions|length }})</button>
 </div>
@@ -114,14 +114,17 @@
       {% if contacts %}
       <table class="table table-sm" style="margin-bottom: 0;">
         <thead>
-          <tr><th>Name</th><th>Position</th><th>Designation</th><th>Contact No.</th><th>Email</th></tr>
+          <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Contact No.</th>
+              <th>Email</th></tr>
         </thead>
         <tbody>
           {% for contact in contacts %}
           <tr>
             <td>{{ contact.name }}</td>
             <td>{{ contact.position }}</td>
-            <td>{{ contact.designation }}</td>
             <td>{{ contact.contact_number }}</td>
             <td>{% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}-{% endif %}</td>
           </tr>
@@ -133,38 +136,38 @@
   </div>
 </div>
 
-<div id="programs" class="tab-pane">
+<div id="needs" class="tab-pane">
   <div class="detail-card">
     <div class="detail-section" style="margin-bottom: 0;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h3 style="margin-bottom: 0;">Programs</h3>
+      <h3 style="margin-bottom: 0;">Needs Repository</h3>
       {% if user.is_authenticated %}
-      <a class="btn btn-primary btn-sm" href="{% url 'program-create' partner.pk %}">Add Program</a>
+      <a class="btn btn-primary btn-sm" href="{% url 'need-create' partner.pk %}">Add Need</a>
       {% endif %}
     </div>
-    {% if programs %}
+    {% if needs %}
     <table class="table table-sm">
       <thead>
         <tr><th>Name</th><th>Description</th><th>Objectives</th><th>Expected Outcomes</th><th>Skills Needed</th><th>Actions</th></tr>
       </thead>
       <tbody>
-        {% for program in programs %}
+        {% for need in needs %}
         <tr>
           <td>
-            <a href="{% url 'program-detail' program.pk %}" style="font-weight: 500; color: var(--primary); text-decoration: none;">{{ program.name }}</a>
+            <a href="{% url 'need-detail' need.pk %}" style="font-weight: 500; color: var(--primary); text-decoration: none;">{{ need.name }}</a>
           </td>
-          <td>{{ program.description|default:"-" }}</td>
-          <td>{{ program.objectives|default:"-" }}</td>
-          <td>{{ program.expected_outcomes|default:"-" }}</td>
-          <td>{{ program.skills_needed|default:"-" }}</td>
+          <td>{{ need.description|default:"-" }}</td>
+          <td>{{ need.objectives|default:"-" }}</td>
+          <td>{{ need.expected_outcomes|default:"-" }}</td>
+          <td>{{ need.skills_needed|default:"-" }}</td>
           <td>
             {% if user.is_authenticated %}
-            <a class="btn-icon btn-edit" href="{% url 'program-update' program.pk %}">
+            <a class="btn-icon btn-edit" href="{% url 'need-update' need.pk %}">
               <i data-lucide="edit" size="14"></i>
             </a>
-            <form method="post" action="{% url 'program-delete' program.pk %}" style="display:inline;">
+            <form method="post" action="{% url 'need-delete' need.pk %}" style="display:inline;">
               {% csrf_token %}
-              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to delete this program?');">
+              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to archive this need?');">
               <i data-lucide="trash" size="14"></i>
               </button>
             </form>
@@ -176,7 +179,7 @@
         {% endfor %}
       </tbody>
     </table>
-    {% else %}<p class="text-muted">No programs recorded.</p>{% endif %}
+    {% else %}<p class="text-muted">No needs recorded.</p>{% endif %}
     </div>
   </div>
 </div>
@@ -226,7 +229,7 @@
             </a>
             <form method="post" action="{% url 'intervention-delete' intervention.pk %}" style="display:inline;">
               {% csrf_token %}
-              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to delete this intervention?');">
+              <button type="submit" class="btn-icon btn-delete" onclick="return confirm('Are you sure you want to archive this intervention?');">
               <i data-lucide="trash" size="14"></i>
               </button>
             </form>

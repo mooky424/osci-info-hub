@@ -37,9 +37,9 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
       <div class="step-label">Socioeconomic</div>
     </div>
     
-    <div class="step {% if step|add:0 > 3 %}completed{% elif step|add:0 == 3 %}active{% endif %} {% if not include_programs and step|add:0 > 1 %}skipped{% endif %}">
-      <div class="step-circle">{% if step|add:0 > 3 %}&#10003;{% elif not include_programs and step|add:0 > 1 %}-{% else %}3{% endif %}</div>
-      <div class="step-label">Programs</div>
+    <div class="step {% if step|add:0 > 3 %}completed{% elif step|add:0 == 3 %}active{% endif %} {% if not include_needs and step|add:0 > 1 %}skipped{% endif %}">
+      <div class="step-circle">{% if step|add:0 > 3 %}&#10003;{% elif not include_needs and step|add:0 > 1 %}-{% else %}3{% endif %}</div>
+      <div class="step-label">Needs Repository</div>
     </div>
     
     <div class="step {% if step|add:0 > 4 %}completed{% elif step|add:0 == 4 %}active{% endif %} {% if not include_past_interventions and step|add:0 > 1 %}skipped{% endif %}">
@@ -105,9 +105,9 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   {% if step == 1 and not is_edit %}
   <div class="detail-section form-box">
     <span class="form-box-label">Optional Sections</span>
-    <div class="form-group {% if form.include_programs.errors %}has-error{% endif %}">
-      <label for="{{ form.include_programs.id_for_label }}">{{ form.include_programs }} Include Programs</label>
-      {% if form.include_programs.errors %}<span class="field-error">{{ form.include_programs.errors.0 }}</span>{% endif %}
+    <div class="form-group {% if form.include_needs.errors %}has-error{% endif %}">
+      <label for="{{ form.include_needs.id_for_label }}">{{ form.include_needs }} Include Needs Repository</label>
+      {% if form.include_needs.errors %}<span class="field-error">{{ form.include_needs.errors.0 }}</span>{% endif %}
     </div>
     <div class="form-group {% if form.include_past_interventions.errors %}has-error{% endif %}">
       <label for="{{ form.include_past_interventions.id_for_label }}">{{ form.include_past_interventions }} Include Past Interventions</label>
@@ -136,11 +136,11 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
   {% endif %}
 
   {% if not is_edit and step == 3 %}
-  {% if include_programs %}
+  {% if include_needs %}
   <div class="detail-section form-box">
-    <span class="form-box-label">Programs</span>
-    {{ program_formset.management_form }}
-    {% for pf in program_formset %}
+    <span class="form-box-label">Needs Repository</span>
+    {{ need_formset.management_form }}
+    {% for pf in need_formset %}
       {{ pf.id }}
       <div class="form-row">
       {% for field in pf.visible_fields %}
@@ -155,7 +155,7 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
     {% endfor %}
   </div>
   {% else %}
-  <p class="text-muted">Programs were skipped on step 1.</p>
+  <p class="text-muted">Needs Repository was skipped on step 1.</p>
   {% endif %}
   {% endif %}
 
@@ -190,7 +190,7 @@ Create Partner - Step {{ step }} - OSCI Partner Hub
       {% elif step == 3 %}
       <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=2">Back</a>
       {% elif step == 4 %}
-        {% if include_programs %}
+        {% if include_needs %}
         <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=3">Back</a>
         {% else %}
         <a class="btn btn-secondary" href="{% url 'partner-create' %}?step=2">Back</a>

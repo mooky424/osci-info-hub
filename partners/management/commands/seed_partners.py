@@ -3,13 +3,7 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from partners.models import (
-    Contact,
-    Partner,
-    PastInterventions,
-    Programs,
-    SocioEconomicProfile,
-)
+from partners.models import Contact, Needs, Partner, PastInterventions, SocioEconomicProfile
 from users.models import User
 
 
@@ -36,7 +30,7 @@ class Command(BaseCommand):
                 "email": "seed.formator@example.com",
                 "role": User.Role.ADMINISTRATOR,
                 "name": "Seed Formator",
-                "position": "Program Formator",
+                "position": "Need Formator",
             },
         )
 
@@ -47,7 +41,7 @@ class Command(BaseCommand):
         created_partners = 0
         created_contacts = 0
         created_profiles = 0
-        created_programs = 0
+        created_needs = 0
         created_interventions = 0
 
         for idx in range(1, count + 1):
@@ -79,8 +73,7 @@ class Command(BaseCommand):
                 community_partner=partner,
                 name=f"Contact Person {idx}",
                 defaults={
-                    "position": "Program Coordinator",
-                    "designation": "Primary Contact",
+                    "position": "Need Coordinator",
                     "contact_number": f"09{idx:09d}",
                     "email": f"partner{idx}@example.com",
                 },
@@ -115,18 +108,18 @@ class Command(BaseCommand):
                 created_profiles += 1
 
             for prog_idx in range(1, 3):
-                _, program_created = Programs.objects.get_or_create(
+                _, need_created = Needs.objects.get_or_create(
                     community_partner=partner,
-                    name=f"Program {prog_idx} - {partner_name}",
+                    name=f"Need {prog_idx} - {partner_name}",
                     defaults={
-                        "description": "Program description",
+                        "description": "Need description",
                         "objectives": "Improve community participation",
                         "expected_outcomes": "Higher engagement and measurable outputs",
                         "skills_needed": "Facilitation, project management",
                     },
                 )
-                if program_created:
-                    created_programs += 1
+                if need_created:
+                    created_needs += 1
 
             for int_idx in range(1, 3):
                 _, intervention_created = PastInterventions.objects.get_or_create(
@@ -150,5 +143,5 @@ class Command(BaseCommand):
         self.stdout.write(f"Partners created: {created_partners}")
         self.stdout.write(f"Contacts created: {created_contacts}")
         self.stdout.write(f"Socioeconomic profiles created: {created_profiles}")
-        self.stdout.write(f"Programs created: {created_programs}")
+        self.stdout.write(f"Needs created: {created_needs}")
         self.stdout.write(f"Past interventions created: {created_interventions}")

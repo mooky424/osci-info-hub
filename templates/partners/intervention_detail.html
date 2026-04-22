@@ -11,7 +11,7 @@
     <a class="btn btn-primary" href="{% url 'intervention-update' intervention.pk %}">Edit Intervention</a>
     <form method="post" action="{% url 'intervention-delete' intervention.pk %}" style="display: inline;">
       {% csrf_token %}
-      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this intervention?');">Delete Intervention</button>
+      <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to archive this intervention?');">Archive Intervention</button>
     </form>
     {% endif %}
   </div>

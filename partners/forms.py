@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import Contact, Partner, PastInterventions, Programs, SocioEconomicProfile
+from .models import Contact, Needs, Partner, PastInterventions, SocioEconomicProfile
 
 
 class PartnerForm(forms.ModelForm):
@@ -35,19 +35,19 @@ class PartnerForm(forms.ModelForm):
 
 
 class PartnerCreateStepOneForm(PartnerForm):
-    include_programs = forms.BooleanField(required=False, initial=False)
+    include_needs = forms.BooleanField(required=False, initial=False)
     include_past_interventions = forms.BooleanField(required=False, initial=False)
 
 
 class ContactForm(forms.ModelForm):
     class Meta:
         model = Contact
-        fields = ["name", "position", "designation", "contact_number", "email"]
+        fields = ["name", "position", "contact_number", "email"]
 
 
-class ProgramForm(forms.ModelForm):
+class NeedForm(forms.ModelForm):
     class Meta:
-        model = Programs
+        model = Needs
         fields = [
             "name",
             "description",
@@ -118,10 +118,10 @@ ContactFormSet = inlineformset_factory(
     can_delete=False,
 )
 
-ProgramFormSet = inlineformset_factory(
+NeedFormSet = inlineformset_factory(
     Partner,
-    Programs,
-    form=ProgramForm,
+    Needs,
+    form=NeedForm,
     extra=1,
     can_delete=False,
 )

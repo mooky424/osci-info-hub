@@ -1,5 +1,6 @@
 from django.core.validators import RegexValidator
 from django.db import models
+
 from users.models import User
 
 contact_validator = RegexValidator(
@@ -23,6 +24,7 @@ class Partner(models.Model):
     moa_start_date = models.DateField(blank=True, null=True)
     moa_end_date = models.DateField(blank=True, null=True)
     moa_link = models.URLField(blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         User,
@@ -50,21 +52,24 @@ class Contact(models.Model):
     )
     name = models.CharField(max_length=255)
     position = models.CharField(max_length=255)
-    designation = models.CharField(max_length=255)
     contact_number = models.CharField(max_length=11, validators=[contact_validator])
     email = models.EmailField(blank=True)
 
 
-class Programs(models.Model):
+class Needs(models.Model):
     id = models.AutoField(primary_key=True)
     community_partner = models.ForeignKey(
-        Partner, on_delete=models.CASCADE, related_name="programs"
+        Partner, on_delete=models.CASCADE, related_name="needs"
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     objectives = models.TextField(blank=True)
     expected_outcomes = models.TextField(blank=True)
     skills_needed = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        db_table = "Needs"
 
 
 class SocioEconomicProfile(models.Model):
@@ -106,3 +111,4 @@ class PastInterventions(models.Model):
     output_link = models.URLField(blank=True)
     pictures_link = models.URLField(blank=True)
     evaluation_link = models.URLField(blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)

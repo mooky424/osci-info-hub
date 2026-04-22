@@ -1,0 +1,131 @@
+<form method="get" class="filters-panel">
+  <div class="search-row">
+    <div class="form-group search-input-wrap">
+      <input id="id_q" type="text" name="q" value="{{ filters.q }}" placeholder="Search partners (name, vision, registrations...)" aria-label="Search partners">
+    </div>
+    <button class="btn btn-primary" type="submit">Search</button>
+    <details class="advanced-filters">
+      <summary class="btn btn-secondary">Advanced Filters</summary>
+      <div class="filters-grid">
+        <div class="form-group">
+          <label for="id_updated_by">Updated by</label>
+          <select id="id_updated_by" name="updated_by">
+            <option value="">Any</option>
+            {% for user in updated_by_users %}
+            <option value="{{ user.updated_by_id }}" {% if filters.updated_by == user.updated_by_id|stringformat:"s" %}selected{% endif %}>{{ user.updated_by__username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="id_has_moa_link">Has MOA link</label>
+          <select id="id_has_moa_link" name="has_moa_link">
+            <option value="">Any</option>
+            <option value="true" {% if filters.has_moa_link == "true" %}selected{% endif %}>Yes</option>
+            <option value="false" {% if filters.has_moa_link == "false" %}selected{% endif %}>No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="id_sort">Sort</label>
+          <select id="id_sort" name="sort">
+            <option value="updated_desc" {% if filters.sort == "updated_desc" %}selected{% endif %}>Recently Updated</option>
+            <option value="updated_asc" {% if filters.sort == "updated_asc" %}selected{% endif %}>Oldest Updated</option>
+            <option value="name_asc" {% if filters.sort == "name_asc" %}selected{% endif %}>Name A-Z</option>
+            <option value="name_desc" {% if filters.sort == "name_desc" %}selected{% endif %}>Name Z-A</option>
+            <option value="established_desc" {% if filters.sort == "established_desc" %}selected{% endif %}>Newest Established</option>
+            <option value="established_asc" {% if filters.sort == "established_asc" %}selected{% endif %}>Oldest Established</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="id_date_established_from">Established From</label>
+          <input id="id_date_established_from" type="date" name="date_established_from" value="{{ filters.date_established_from }}">
+        </div>
+        <div class="form-group">
+          <label for="id_date_established_to">Established To</label>
+          <input id="id_date_established_to" type="date" name="date_established_to" value="{{ filters.date_established_to }}">
+        </div>
+        <div class="form-group">
+          <label for="id_moa_start_from">MOA Start From</label>
+          <input id="id_moa_start_from" type="date" name="moa_start_from" value="{{ filters.moa_start_from }}">
+        </div>
+        <div class="form-group">
+          <label for="id_moa_start_to">MOA Start To</label>
+          <input id="id_moa_start_to" type="date" name="moa_start_to" value="{{ filters.moa_start_to }}">
+        </div>
+        <div class="form-group">
+          <label for="id_moa_end_from">MOA End From</label>
+          <input id="id_moa_end_from" type="date" name="moa_end_from" value="{{ filters.moa_end_from }}">
+        </div>
+        <div class="form-group">
+          <label for="id_moa_end_to">MOA End To</label>
+          <input id="id_moa_end_to" type="date" name="moa_end_to" value="{{ filters.moa_end_to }}">
+        </div>
+        <div class="form-group">
+          <label for="id_updated_from">Updated From</label>
+          <input id="id_updated_from" type="date" name="updated_from" value="{{ filters.updated_from }}">
+        </div>
+        <div class="form-group">
+          <label for="id_updated_to">Updated To</label>
+          <input id="id_updated_to" type="date" name="updated_to" value="{{ filters.updated_to }}">
+        </div>
+      </div>
+    </details>
+  </div>
+  {% if filters.q or filters.updated_by or filters.has_moa_link or filters.date_established_from or filters.date_established_to or filters.moa_start_from or filters.moa_start_to or filters.moa_end_from or filters.moa_end_to or filters.updated_from or filters.updated_to or filters.sort != "updated_desc" %}
+  <div class="active-filters">
+    {% if filters.q %}
+    <a class="filter-tag" href="{{ clear_filter_urls.q }}">Search: {{ filters.q }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+
+    {% if filters.updated_by %}
+      {% for user in updated_by_users %}
+        {% if filters.updated_by == user.updated_by_id|stringformat:"s" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.updated_by }}">Updated by: {{ user.updated_by__username }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% if filters.has_moa_link == "true" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.has_moa_link }}">Has MOA link: Yes <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% elif filters.has_moa_link == "false" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.has_moa_link }}">Has MOA link: No <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+
+    {% if filters.date_established_from %}
+    <a class="filter-tag" href="{{ clear_filter_urls.date_established_from }}">Established from: {{ filters.date_established_from }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.date_established_to %}
+    <a class="filter-tag" href="{{ clear_filter_urls.date_established_to }}">Established to: {{ filters.date_established_to }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.moa_start_from %}
+    <a class="filter-tag" href="{{ clear_filter_urls.moa_start_from }}">MOA start from: {{ filters.moa_start_from }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.moa_start_to %}
+    <a class="filter-tag" href="{{ clear_filter_urls.moa_start_to }}">MOA start to: {{ filters.moa_start_to }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.moa_end_from %}
+    <a class="filter-tag" href="{{ clear_filter_urls.moa_end_from }}">MOA end from: {{ filters.moa_end_from }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.moa_end_to %}
+    <a class="filter-tag" href="{{ clear_filter_urls.moa_end_to }}">MOA end to: {{ filters.moa_end_to }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.updated_from %}
+    <a class="filter-tag" href="{{ clear_filter_urls.updated_from }}">Updated from: {{ filters.updated_from }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+    {% if filters.updated_to %}
+    <a class="filter-tag" href="{{ clear_filter_urls.updated_to }}">Updated to: {{ filters.updated_to }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+
+    {% if filters.sort == "name_asc" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.sort }}">Sort: Name A-Z <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% elif filters.sort == "name_desc" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.sort }}">Sort: Name Z-A <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% elif filters.sort == "updated_asc" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.sort }}">Sort: Oldest Updated <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% elif filters.sort == "established_desc" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.sort }}">Sort: Newest Established <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% elif filters.sort == "established_asc" %}
+    <a class="filter-tag" href="{{ clear_filter_urls.sort }}">Sort: Oldest Established <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    {% endif %}
+  </div>
+  {% endif %}
+</form>
