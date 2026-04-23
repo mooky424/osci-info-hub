@@ -78,9 +78,8 @@ Open:
 
 The app reads `.env` from this directory.
 
-If all PostgreSQL values are present, PostgreSQL is used; otherwise SQLite is used.
-
 ```env
+SECRET_KEY=
 POSTGRES_DB=
 POSTGRES_USER=
 POSTGRES_PASSWORD=
