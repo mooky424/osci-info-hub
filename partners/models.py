@@ -68,9 +68,6 @@ class Needs(models.Model):
     skills_needed = models.TextField(blank=True)
     is_archived = models.BooleanField(default=False, db_index=True)
 
-    class Meta:
-        db_table = "Needs"
-
 
 class SocioEconomicProfile(models.Model):
     id = models.AutoField(primary_key=True)
