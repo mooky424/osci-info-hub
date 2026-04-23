@@ -8,14 +8,14 @@ DEFAULT_USERS = [
         "username": "admin1",
         "email": "admin1@example.com",
         "name": "Admin One",
-        "position": "System Administrator",
+        "role": User.Role.ADMINISTRATOR,
         "password": "admin12345",
     },
     {
         "username": "admin2",
         "email": "admin2@example.com",
         "name": "Admin Two",
-        "position": "Assistant System Administrator",
+        "role": User.Role.ADMINISTRATOR,
         "password": "admin12345",
     },
 ]
@@ -35,8 +35,7 @@ class Command(BaseCommand):
             defaults = {
                 "email": user_data["email"],
                 "name": user_data["name"],
-                "position": user_data["position"],
-                "role": User.Role.ADMINISTRATOR,
+                "role": user_data["role"],
                 "is_staff": True,
                 "is_superuser": True,
                 "is_active": True,
