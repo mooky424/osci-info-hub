@@ -12,7 +12,7 @@
           <select id="id_updated_by" name="updated_by">
             <option value="">Any</option>
             {% for user in updated_by_users %}
-            <option value="{{ user.updated_by_id }}" {% if filters.updated_by == user.updated_by_id|stringformat:"s" %}selected{% endif %}>{{ user.updated_by__username }}</option>
+            <option value="{{ user.updated_by_id }}" {% if filters.updated_by == user.updated_by_id|stringformat:"s" %}selected{% endif %}>{{ user.updated_by__name|default:user.updated_by__username }}</option>
             {% endfor %}
           </select>
         </div>
@@ -79,7 +79,7 @@
     {% if filters.updated_by %}
       {% for user in updated_by_users %}
         {% if filters.updated_by == user.updated_by_id|stringformat:"s" %}
-    <a class="filter-tag" href="{{ clear_filter_urls.updated_by }}">Updated by: {{ user.updated_by__username }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
+    <a class="filter-tag" href="{{ clear_filter_urls.updated_by }}">Updated by: {{ user.updated_by__name|default:user.updated_by__username }} <span class="filter-tag-remove" aria-hidden="true">x</span></a>
         {% endif %}
       {% endfor %}
     {% endif %}

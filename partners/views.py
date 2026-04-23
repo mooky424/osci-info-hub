@@ -305,9 +305,9 @@ def partner_list(request):
     # for the "updated by" filter dropdown.
     users = (
         Partner.objects.exclude(updated_by=None)
-        .values("updated_by_id", "updated_by__username")
+        .values("updated_by_id", "updated_by__name", "updated_by__username")
         .distinct()
-        .order_by("updated_by__username")
+        .order_by("updated_by__name")
     )
 
     context = {
@@ -393,20 +393,25 @@ def partner_bulk_import(request):
             stdout = StringIO()
             stderr = StringIO()
 
+            call_command_kwargs = {
+                "stdout": stdout,
+                "stderr": stderr,
+            }
+            if request.user.is_authenticated:
+                call_command_kwargs["user"] = request.user.username
+
             if dry_run:
                 call_command(
                     "import_partner_csv",
                     temp_path,
                     "--dry-run",
-                    stdout=stdout,
-                    stderr=stderr,
+                    **call_command_kwargs,
                 )
             else:
                 call_command(
                     "import_partner_csv",
                     temp_path,
-                    stdout=stdout,
-                    stderr=stderr,
+                    **call_command_kwargs,
                 )
 
             context["command_output"] = stdout.getvalue()

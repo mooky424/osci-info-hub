@@ -14,6 +14,9 @@ class User(AbstractUser):
         default=Role.ADMINISTRATOR,
     )
 
+    def __str__(self):
+        return self.name or self.username
+
     @property
     def is_administrator(self):
         return self.role == self.Role.ADMINISTRATOR

@@ -24,7 +24,7 @@
     <div>
       <div class="detail-group">
         <label>Formator</label>
-        <p>{% if intervention.formator %}{{ intervention.formator.get_full_name|default:intervention.formator.username }}{% else %}N/A{% endif %}</p>
+        <p>{% if intervention.formator %}{{ intervention.formator.name|default:intervention.formator.username }}{% else %}N/A{% endif %}</p>
       </div>
       <div class="detail-group">
         <label>Date Started</label>

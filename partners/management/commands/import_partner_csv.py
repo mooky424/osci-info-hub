@@ -18,10 +18,19 @@ class Command(BaseCommand):
             action="store_true",
             help="Validate and parse rows without saving",
         )
+        parser.add_argument(
+            "--user",
+            type=str,
+            default=None,
+            help="Username to set as updated_by on imported partners",
+        )
 
     def handle(self, *args, **options):
         csv_path = options["csv_path"]
         dry_run = options["dry_run"]
+        import_user = None
+        if options["user"]:
+            import_user = User.objects.filter(username=options["user"]).first()
 
         required_columns = {
             "partner_name",
@@ -66,6 +75,7 @@ class Command(BaseCommand):
                         row_result, current_partner_key = self._import_row(
                             row,
                             current_partner_key,
+                            import_user,
                         )
                     except Exception as exc:
                         counters["errors"] += 1
@@ -85,7 +95,7 @@ class Command(BaseCommand):
         for key, value in counters.items():
             self.stdout.write(f"{key}: {value}")
 
-    def _import_row(self, row, current_partner_key):
+    def _import_row(self, row, current_partner_key, import_user):
         result = {
             "partners_created": 0,
             "partners_updated": 0,
@@ -156,6 +166,7 @@ class Command(BaseCommand):
             ),
             "moa_link": _value(row, "partner_moa_link"),
             "is_archived": False,
+            "updated_by": import_user,
         }
 
         if update_partner_profile:
