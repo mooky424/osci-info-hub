@@ -4,6 +4,12 @@ from . import views
 
 urlpatterns = [
     path("", views.partner_list, name="partner-list"),
+    path("bulk-import/", views.partner_bulk_import, name="partner-bulk-import"),
+    path(
+        "bulk-import/template/",
+        views.partner_bulk_import_template_download,
+        name="partner-bulk-import-template",
+    ),
     path("create/", views.partner_create, name="partner-create"),
     path("<int:pk>/", views.partner_detail, name="partner-detail"),
     path("<int:pk>/export/pdf/", views.partner_export_pdf, name="partner-export-pdf"),
