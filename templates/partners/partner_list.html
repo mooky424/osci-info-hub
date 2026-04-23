@@ -6,7 +6,10 @@
 <div class="page-header">
   <h1>Community Partners</h1>
   {% if user.is_authenticated %}
-  <a class="btn btn-primary" href="{% url 'partner-create' %}">Add Partner</a>
+  <div class="header-actions">
+    <a class="btn btn-secondary" href="{% url 'partner-bulk-import' %}">Bulk Import CSV</a>
+    <a class="btn btn-primary" href="{% url 'partner-create' %}">Add Partner</a>
+  </div>
   {% endif %}
 </div>
 
