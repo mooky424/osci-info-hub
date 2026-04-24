@@ -545,6 +545,29 @@ def _get_pdf_styles():
             fontSize=10,
             leading=13,
         ),
+        "intervention_header": ParagraphStyle(
+            "InterventionHeader",
+            parent=styles["Normal"],
+            fontName="Times-Bold",
+            fontSize=9,
+            leading=11,
+        ),
+        "intervention_cell": ParagraphStyle(
+            "InterventionCell",
+            parent=styles["Normal"],
+            fontSize=9,
+            leading=11,
+        ),
+        # Links often contain long URLs without spaces. Use CJK wrapping so
+        # ReportLab can break long runs of characters instead of overflowing.
+        "intervention_cell_wrap": ParagraphStyle(
+            "InterventionCellWrap",
+            parent=styles["Normal"],
+            fontSize=9,
+            leading=11,
+            wordWrap="CJK",
+            splitLongWords=1,
+        ),
     }
 
 
@@ -577,14 +600,16 @@ def _text(value):
 def partner_export_pdf(request, pk):
     """Generate and download a PDF profile for a single partner.
 
-    The PDF has two parts:
+    The PDF has three parts:
         **Part 1 — Description of the CPO**
             A two-column table covering vision, mission, goals, needs,
             contacts, registration info, etc.
 
-        **Part 2 — Socioeconomic Profile and Interventions** *(if data exists)*
-            A two-column socioeconomic profile table, followed by a
-            five-column past-interventions table.
+        **Part 2 — Socioeconomic Profile** *(if data exists)*
+            A two-column socioeconomic profile table.
+
+        **Part 3 — Interventions** *(if data exists)*
+            A five-column past-interventions table.
 
     Returns:
         ``HttpResponse`` with ``Content-Disposition: attachment``.
@@ -736,23 +761,20 @@ def partner_export_pdf(request, pk):
     story.append(
         Paragraph("PART 1: DESCRIPTION OF THE CPO", pdf_styles["section_heading"])
     )
-    description_table = Table(table_rows, colWidths=[62 * mm, 118 * mm])
+    # Fit within the document's printable width to avoid clipping.
+    description_table = Table(table_rows, colWidths=[58 * mm, 116 * mm])
     description_table.setStyle(_TABLE_STYLE)
     story.append(description_table)
 
-    # ── Part 2: Socioeconomic Profile and Interventions ──
-
-    if profiles or interventions:
+    # ── Part 2: Socioeconomic Profile ──
+    if profiles:
         story.append(PageBreak())
         story.append(
             Paragraph(
-                "PART 2: SOCIOECONOMIC PROFILE AND INTERVENTIONS",
+                "PART 2: SOCIOECONOMIC PROFILE",
                 pdf_styles["section_heading"],
             )
         )
-
-    # Socioeconomic profile table
-    if profiles:
         profile_field_labels = [
             ("population_size", "Population Size"),
             ("population_breakdown", "Population Breakdown"),
@@ -789,15 +811,32 @@ def partner_export_pdf(request, pk):
                 ]
                 for label, value in profile_rows
             ],
-            colWidths=[62 * mm, 118 * mm],
+            colWidths=[58 * mm, 116 * mm],
         )
         profile_table.setStyle(_TABLE_STYLE)
         story.append(profile_table)
-        story.append(Spacer(1, 8))
+
+    # ── Part 3: Interventions ──
+    if interventions:
+        story.append(PageBreak())
+        story.append(
+            Paragraph(
+                "PART 3: INTERVENTIONS",
+                pdf_styles["section_heading"],
+            )
+        )
 
     # Past interventions table
     if interventions:
-        intervention_rows = [["Name", "Dates", "Formator", "Outcomes", "Links"]]
+        intervention_rows = [
+            [
+                Paragraph("Name", pdf_styles["intervention_header"]),
+                Paragraph("Dates", pdf_styles["intervention_header"]),
+                Paragraph("Formator", pdf_styles["intervention_header"]),
+                Paragraph("Outcomes", pdf_styles["intervention_header"]),
+                Paragraph("Links", pdf_styles["intervention_header"]),
+            ]
+        ]
         for intervention in interventions:
             date_range = _text(intervention.date_started)
             if intervention.date_ended:
@@ -815,17 +854,27 @@ def partner_export_pdf(request, pk):
 
             intervention_rows.append(
                 [
-                    _text(intervention.name),
-                    _text(date_range),
-                    _text(intervention.formator),
-                    _text(intervention.outcomes),
-                    _text(" | ".join(links) if links else "-"),
+                    Paragraph(_text(intervention.name), pdf_styles["intervention_cell"]),
+                    Paragraph(_text(date_range), pdf_styles["intervention_cell"]),
+                    Paragraph(
+                        _text(intervention.formator),
+                        pdf_styles["intervention_cell"],
+                    ),
+                    Paragraph(
+                        _text(intervention.outcomes),
+                        pdf_styles["intervention_cell"],
+                    ),
+                    Paragraph(
+                        _text("<br/>".join(links) if links else "-"),
+                        pdf_styles["intervention_cell_wrap"],
+                    ),
                 ]
             )
 
         intervention_table = Table(
             intervention_rows,
-            colWidths=[32 * mm, 30 * mm, 30 * mm, 46 * mm, 42 * mm],
+            # Total must fit within printable width (A4 minus margins).
+            colWidths=[30 * mm, 28 * mm, 28 * mm, 44 * mm, 44 * mm],
             repeatRows=1,
         )
         intervention_table.setStyle(
@@ -833,8 +882,6 @@ def partner_export_pdf(request, pk):
                 [
                     ("GRID", (0, 0), (-1, -1), 1.0, colors.black),
                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f2f2f2")),
-                    ("FONTNAME", (0, 0), (-1, 0), "Times-Bold"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 9),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                     ("LEFTPADDING", (0, 0), (-1, -1), 6),
                     ("RIGHTPADDING", (0, 0), (-1, -1), 6),
